@@ -1,0 +1,1221 @@
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+
+  background:#faf8f3;
+  color:#4f473f;
+
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Noto Sans TC",
+    sans-serif;
+}
+
+
+.page{
+  width:min(620px,92%);
+  margin:0 auto;
+
+  padding:42px 0 80px;
+}
+
+
+/* =========================
+   Header
+========================= */
+
+.header{
+  margin-bottom:30px;
+}
+
+.brand{
+  font-size:36px;
+  font-weight:800;
+  letter-spacing:-1px;
+}
+
+.subtitle{
+  margin-top:4px;
+
+  color:#958b80;
+
+  font-size:15px;
+}
+
+
+/* =========================
+   Cards
+========================= */
+
+.card{
+  background:#fff;
+
+  border:1px solid #eee7dc;
+  border-radius:20px;
+
+  padding:24px;
+  margin-bottom:20px;
+
+  box-shadow:
+    0 8px 30px
+    rgba(70,50,30,.04);
+}
+
+
+/* =========================
+   Forms
+========================= */
+
+label{
+  display:block;
+
+  margin-bottom:10px;
+
+  font-size:14px;
+  font-weight:700;
+}
+
+select{
+  width:100%;
+
+  padding:14px 16px;
+
+  border:
+    1px solid #dcd4ca;
+
+  border-radius:12px;
+
+  background:#fff;
+
+  color:#4f473f;
+
+  font-size:16px;
+}
+
+button{
+  width:100%;
+
+  margin-top:14px;
+  padding:15px;
+
+  border:0;
+  border-radius:12px;
+
+  background:#efd467;
+
+  color:#55482a;
+
+  font-size:16px;
+  font-weight:800;
+
+  cursor:pointer;
+}
+
+button:hover{
+  opacity:.9;
+}
+
+button:disabled{
+  opacity:.55;
+  cursor:default;
+}
+
+
+#status{
+  margin:12px 0 0;
+
+  color:#9b6259;
+
+  font-size:14px;
+}
+
+
+/* =========================
+   Utility
+========================= */
+
+.hidden{
+  display:none;
+}
+
+
+/* =========================
+   Welcome
+========================= */
+
+.welcome{
+  margin:
+    34px 4px 18px;
+}
+
+.eyebrow{
+  margin:0 0 6px;
+
+  color:#a1927e;
+
+  font-size:13px;
+  font-weight:700;
+
+  letter-spacing:.08em;
+}
+
+.welcome h1{
+  margin:0;
+
+  font-size:26px;
+}
+
+.muted{
+  color:#9b9187;
+
+  font-size:14px;
+}
+
+
+/* =========================
+   Section heading
+========================= */
+
+.section-title{
+  display:flex;
+
+  justify-content:
+    space-between;
+
+  align-items:center;
+
+  gap:12px;
+
+  margin-bottom:6px;
+}
+
+.section-title h2{
+  margin:0;
+
+  font-size:20px;
+}
+
+.badge{
+  padding:6px 10px;
+
+  border-radius:999px;
+
+  background:#f7efd2;
+
+  color:#806b30;
+
+  font-size:12px;
+  font-weight:700;
+}
+
+
+/* =========================
+   Original order
+========================= */
+
+.product-group{
+  padding:18px 0;
+
+  border-bottom:
+    1px solid #eee9e2;
+}
+
+.product-group:last-child{
+  border-bottom:0;
+}
+
+.product-title{
+  margin-bottom:12px;
+
+  color:#50483f;
+
+  font-size:18px;
+  font-weight:800;
+}
+
+.product-variant{
+  display:flex;
+
+  justify-content:
+    space-between;
+
+  align-items:flex-start;
+
+  gap:20px;
+
+  padding:9px 0;
+}
+
+.variant-spec{
+  font-size:15px;
+  font-weight:600;
+}
+
+.variant-qty{
+  margin-top:4px;
+
+  color:#988d82;
+
+  font-size:13px;
+}
+
+.variant-price{
+  white-space:nowrap;
+
+  font-size:15px;
+  font-weight:700;
+}
+
+
+.total-row{
+  display:flex;
+
+  justify-content:
+    space-between;
+
+  align-items:center;
+
+  margin-top:12px;
+  padding-top:20px;
+
+  border-top:
+    1px solid #ddd5ca;
+}
+
+.total-row strong{
+  font-size:21px;
+}
+
+
+/* =========================
+   Addons
+========================= */
+
+.addon-card{
+  border-top:
+    1px solid #eee9e2;
+
+  padding-top:20px;
+  margin-top:20px;
+}
+
+.addon-card:first-child{
+  border-top:none;
+
+  margin-top:0;
+  padding-top:0;
+}
+
+.addon-title{
+  font-size:18px;
+  font-weight:700;
+}
+
+.addon-field-label{
+  margin-top:14px;
+  margin-bottom:8px;
+
+  color:#8d8175;
+
+  font-size:14px;
+  font-weight:600;
+}
+
+
+.addon-action-row{
+  display:flex;
+
+  justify-content:
+    space-between;
+
+  align-items:center;
+
+  gap:16px;
+
+  margin-top:14px;
+}
+
+
+.qty-control{
+  display:flex;
+
+  align-items:center;
+
+  gap:12px;
+}
+
+
+.qty-btn{
+  width:38px;
+  height:38px;
+
+  margin:0;
+  padding:0;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  border-radius:10px;
+
+  background:#efd467;
+}
+
+
+.qty-value{
+  width:32px;
+
+  text-align:center;
+
+  font-weight:700;
+}
+
+
+.add-button{
+  width:auto;
+
+  min-width:90px;
+
+  margin:0;
+
+  padding:11px 20px;
+}
+
+
+.addon-cart-area{
+  margin-top:26px;
+  padding-top:20px;
+
+  border-top:
+    1px solid #ddd5ca;
+}
+
+.addon-cart-title{
+  margin-bottom:10px;
+
+  font-size:16px;
+  font-weight:800;
+}
+
+
+.cart-item{
+  display:flex;
+
+  justify-content:
+    space-between;
+
+  gap:16px;
+
+  padding:13px 0;
+
+  border-bottom:
+    1px solid #eee9e2;
+}
+
+
+.cart-item-name{
+  font-size:14px;
+  font-weight:700;
+}
+
+.cart-item-spec{
+  margin-top:3px;
+
+  color:#988d82;
+
+  font-size:13px;
+}
+
+.cart-item-right{
+  text-align:right;
+
+  white-space:nowrap;
+}
+
+.remove-addon{
+  width:auto;
+
+  margin:5px 0 0;
+  padding:0;
+
+  background:transparent;
+
+  color:#a18e7e;
+
+  font-size:12px;
+  font-weight:500;
+}
+
+
+/* =========================
+   Shipping
+========================= */
+
+.shipping-option{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  gap:20px;
+
+  width:100%;
+
+  padding:18px 0;
+  margin:0;
+
+  border-bottom:1px solid #eee9e2;
+
+  cursor:pointer;
+}
+
+.shipping-option:last-child{
+  border-bottom:0;
+}
+
+.shipping-left{
+  display:flex;
+  align-items:center;
+
+  gap:12px;
+
+  min-width:0;
+}
+
+.shipping-left input[type="radio"]{
+  width:18px;
+  height:18px;
+
+  margin:0;
+  padding:0;
+
+  flex:0 0 18px;
+
+  accent-color:#d9b93d;
+
+  cursor:pointer;
+}
+
+.shipping-left span{
+  white-space:nowrap;
+
+  font-size:15px;
+  font-weight:700;
+}
+
+.shipping-option > strong{
+  margin-left:auto;
+
+  white-space:nowrap;
+
+  font-size:15px;
+  font-weight:700;
+}
+
+
+/* =========================
+   Summary
+========================= */
+
+.summary-row{
+  display:flex;
+
+  justify-content:
+    space-between;
+
+  padding:8px 0;
+
+  color:#746a60;
+}
+
+
+.summary-grand{
+  display:flex;
+
+  justify-content:
+    space-between;
+
+  align-items:center;
+
+  margin-top:18px;
+  padding-top:18px;
+
+  border-top:
+    1px solid #ddd5ca;
+}
+
+.summary-grand strong{
+  font-size:24px;
+}
+
+
+/* =========================
+   Mobile
+========================= */
+
+@media(max-width:480px){
+
+  .page{
+    width:92%;
+
+    padding-top:28px;
+  }
+
+  .brand{
+    font-size:32px;
+  }
+
+  .card{
+    padding:20px;
+  }
+
+  .welcome h1{
+    font-size:24px;
+  }
+
+}
+/* =========================
+   Receiver form
+========================= */
+
+.form-field{
+  margin-top:18px;
+}
+
+.form-field:first-of-type{
+  margin-top:14px;
+}
+
+.form-field label{
+  margin-bottom:8px;
+}
+
+
+input[type="text"],
+input[type="tel"],
+input[type="number"],
+textarea{
+  width:100%;
+
+  padding:14px 16px;
+
+  border:1px solid #dcd4ca;
+  border-radius:12px;
+
+  background:#fff;
+
+  color:#4f473f;
+
+  font-family:inherit;
+  font-size:16px;
+
+  outline:none;
+}
+
+
+input[type="text"]:focus,
+input[type="tel"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus{
+  border-color:#d7b83e;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(239,212,103,.18);
+}
+  border-color:#d7b83e;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(239,212,103,.18);
+}
+
+
+textarea{
+  resize:vertical;
+}
+
+
+.field-note{
+  margin:7px 2px 0;
+
+  color:#9b9187;
+
+  font-size:12px;
+  line-height:1.5;
+}
+
+
+.optional{
+  color:#a89d92;
+
+  font-size:12px;
+  font-weight:400;
+}
+
+
+.form-divider{
+  margin:24px 0 4px;
+
+  border-top:
+    1px solid #eee9e2;
+}
+/* =========================
+   Submit
+========================= */
+
+.submit-notice{
+  color:#8e8379;
+
+  font-size:13px;
+  line-height:1.7;
+
+  margin-bottom:18px;
+}
+
+
+.confirm-check{
+  display:flex;
+  align-items:center;
+
+  gap:10px;
+
+  margin:0;
+
+  cursor:pointer;
+
+  font-size:14px;
+}
+
+
+.confirm-check input[type="checkbox"]{
+  width:18px;
+  height:18px;
+
+  margin:0;
+  padding:0;
+
+  flex:0 0 18px;
+
+  accent-color:#d8b83d;
+}
+
+
+#submitOrderButton{
+  margin-top:22px;
+}
+
+
+.submit-status{
+  margin:12px 0 0;
+
+  color:#9b6259;
+
+  font-size:13px;
+  text-align:center;
+}
+
+
+/* =========================
+   Success
+========================= */
+
+.success-card{
+  text-align:center;
+
+  padding-top:36px;
+  padding-bottom:36px;
+}
+
+
+.success-icon{
+  width:54px;
+  height:54px;
+
+  margin:0 auto 18px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  border-radius:50%;
+
+  background:#efd467;
+
+  color:#55482a;
+
+  font-size:25px;
+  font-weight:800;
+}
+
+
+.success-card h2{
+  margin:0 0 8px;
+
+  font-size:24px;
+}
+
+
+.success-card > p{
+  color:#8f8479;
+}
+
+
+.success-order,
+.success-total{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  margin-top:20px;
+  padding-top:18px;
+
+  border-top:1px solid #eee7dc;
+}
+
+
+.success-total strong{
+  font-size:24px;
+}
+
+
+.success-note{
+  margin-top:22px !important;
+
+  font-size:12px;
+}
+/* =========================
+   Success page
+========================= */
+
+.success-card{
+  text-align:center;
+
+  padding:
+    36px 28px;
+}
+
+
+.success-icon{
+  width:58px;
+  height:58px;
+
+  margin:
+    0 auto 18px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  border-radius:50%;
+
+  background:#efd467;
+
+  color:#55482a;
+
+  font-size:26px;
+  font-weight:800;
+}
+
+
+.success-card h2{
+  margin:
+    0 0 8px;
+
+  font-size:26px;
+}
+
+
+.success-intro{
+  margin:
+    0 auto 26px;
+
+  color:#8f8479;
+
+  font-size:14px;
+  line-height:1.7;
+}
+
+
+/* 訂單資訊 */
+
+.success-info-box{
+  margin-top:24px;
+
+  padding:
+    6px 0;
+
+  border-top:
+    1px solid #eee7dc;
+
+  border-bottom:
+    1px solid #eee7dc;
+}
+
+
+.success-info-row{
+  display:flex;
+
+  justify-content:
+    space-between;
+
+  align-items:center;
+
+  gap:20px;
+
+  padding:
+    14px 0;
+
+  text-align:left;
+}
+
+
+.success-info-row span{
+  color:#8f8479;
+
+  font-size:14px;
+}
+
+
+.success-info-row strong{
+  font-size:16px;
+}
+
+
+.success-total-row strong{
+  font-size:24px;
+
+  color:#55482a;
+}
+
+
+/* =========================
+   Payment
+========================= */
+
+.payment-box{
+  margin-top:26px;
+
+  padding:22px;
+
+  border-radius:16px;
+
+  background:#faf6e9;
+
+  text-align:left;
+}
+
+
+.payment-heading h3{
+  margin:
+    3px 0 12px;
+
+  font-size:20px;
+}
+
+
+.payment-row{
+  display:flex;
+
+  justify-content:
+    space-between;
+
+  gap:20px;
+
+  padding:
+    10px 0;
+
+  border-bottom:
+    1px solid rgba(117,95,50,.1);
+}
+
+
+.payment-row span{
+  color:#8b7d6f;
+
+  font-size:13px;
+}
+
+
+.payment-row strong{
+  text-align:right;
+
+  font-size:14px;
+}
+
+
+/* 帳號 */
+
+.payment-account{
+  margin-top:18px;
+
+  text-align:center;
+}
+
+
+.payment-label{
+  display:block;
+
+  margin-bottom:7px;
+
+  color:#8b7d6f;
+
+  font-size:13px;
+}
+
+
+.account-number{
+  padding:
+    15px 10px;
+
+  border-radius:12px;
+
+  background:#fff;
+
+  font-size:22px;
+  font-weight:800;
+
+  letter-spacing:.06em;
+
+  word-break:break-all;
+}
+
+
+.copy-button{
+  width:auto;
+
+  min-width:120px;
+
+  margin-top:12px;
+
+  padding:
+    11px 20px;
+}
+
+
+.copy-status{
+  min-height:18px;
+
+  margin:
+    8px 0 0;
+
+  color:#7b6b37;
+
+  font-size:12px;
+
+  text-align:center;
+}
+
+
+/* 提醒 */
+
+.payment-notice{
+  margin-top:22px;
+
+  padding:
+    18px;
+
+  border-radius:14px;
+
+  background:#fbfaf7;
+
+  text-align:left;
+}
+
+
+.payment-notice strong{
+  font-size:14px;
+}
+
+
+.payment-notice p{
+  margin:
+    8px 0 0;
+
+  color:#8f8479;
+
+  font-size:13px;
+
+  line-height:1.7;
+}
+/* =========================
+   Tracking
+========================= */
+
+.secondary-button{
+  background:#fff;
+
+  border:1px solid #dcd4ca;
+
+  color:#6d6258;
+
+  margin-bottom:20px;
+}
+
+
+.tracking-order-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+
+  gap:20px;
+
+  padding-bottom:18px;
+
+  border-bottom:
+    1px solid #eee9e2;
+}
+
+
+.tracking-total{
+  text-align:right;
+}
+
+
+.tracking-progress{
+  margin-top:24px;
+}
+
+
+.tracking-step{
+  position:relative;
+
+  display:flex;
+
+  gap:14px;
+
+  padding-bottom:24px;
+}
+
+
+.tracking-step:not(:last-child)::after{
+  content:"";
+
+  position:absolute;
+
+  left:14px;
+  top:30px;
+
+  width:2px;
+  height:calc(100% - 15px);
+
+  background:#e8e1d7;
+}
+
+
+.tracking-dot{
+  width:30px;
+  height:30px;
+
+  flex:0 0 30px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  border:2px solid #ddd4c6;
+  border-radius:50%;
+
+  background:#fff;
+
+  color:#fff;
+
+  font-size:13px;
+  font-weight:800;
+
+  z-index:1;
+}
+
+
+.tracking-dot.done{
+  border-color:#d9b93d;
+
+  background:#efd467;
+
+  color:#55482a;
+}
+
+
+.tracking-step-text{
+  display:flex;
+  flex-direction:column;
+
+  gap:3px;
+
+  padding-top:2px;
+}
+
+
+.tracking-step-text span{
+  color:#958b80;
+
+  font-size:12px;
+}
+
+
+.tracking-step-text strong{
+  font-size:15px;
+}
+
+
+.tracking-detail{
+  margin-top:8px;
+
+  padding-top:8px;
+
+  border-top:
+    1px solid #eee9e2;
+}
+
+
+.tracking-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  gap:18px;
+
+  padding:12px 0;
+}
+
+
+.tracking-row span{
+  color:#8e8379;
+
+  font-size:13px;
+}
+
+
+.tracking-row strong{
+  text-align:right;
+
+  font-size:14px;
+}
+.tracking-locked-notice{
+  margin-bottom:22px;
+  padding:16px 18px;
+
+  border-radius:14px;
+
+  background:#faf6e9;
+
+  color:#655936;
+}
+
+.tracking-locked-notice strong{
+  font-size:14px;
+}
+
+.tracking-locked-notice p{
+  margin:6px 0 0;
+
+  color:#8d8175;
+
+  font-size:12px;
+  line-height:1.6;
+}
