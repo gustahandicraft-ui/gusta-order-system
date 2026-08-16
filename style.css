@@ -1220,49 +1220,56 @@ textarea{
   line-height:1.6;
 }
 /* =====================================================
-   Campaign selector spacing
+   Campaign selector
    ===================================================== */
 
-/* 團購活動選單 */
-#campaignSelect {
-  margin-bottom: 0;
+#campaignBlock{
+  margin-bottom: 22px;
+}
+
+#campaignBlock > label{
+  display:block;
+  margin-bottom:12px;
+}
+
+#campaignSelect{
+  margin-bottom:0;
 }
 
 
-/* 團購期間資訊 */
-#campaignInfo {
-  margin-top: 10px;
-  margin-bottom: 24px;
+/* 團購期間：只當輔助資訊 */
+#campaignInfo{
+  margin-top:8px;
+  margin-bottom:24px;
+}
+
+.campaign-period{
+  display:flex;
+  align-items:center;
+  gap:6px;
+
+  color:#a79b8d;
+  font-size:13px;
+  line-height:1.4;
+}
+
+.campaign-period-label{
+  font-weight:500;
+}
+
+.campaign-period-label::after{
+  content:"｜";
+  margin-left:4px;
+  color:#c4b9ad;
+}
+
+.campaign-period-date{
+  font-weight:500;
 }
 
 
-/* 團購期間整列 */
-.campaign-period {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  font-size: 14px;
-  line-height: 1.5;
-
-  color: #9a8f82;
-}
-
-
-/* 「團購期間」 */
-.campaign-period-label {
-  font-weight: 600;
-}
-
-
-/* 日期 */
-.campaign-period-date {
-  font-weight: 500;
-}
-
-
-/* LINE 名稱標題 */
-#searchCard label[for="customerSelect"] {
-  display: block;
-  margin-bottom: 10px;
+/* LINE 名稱 */
+#searchCard label[for="customerSelect"]{
+  display:block;
+  margin-bottom:12px;
 }
