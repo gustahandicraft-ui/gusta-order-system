@@ -293,8 +293,16 @@ function renderCampaignSelector(){
       );
 
     option.value = "";
-    option.textContent =
-      "目前沒有團購活動";
+   const dateRange =
+  formatCampaignRange(
+    campaign.startDate,
+    campaign.endDate
+  );
+
+option.textContent =
+  dateRange
+    ? `${campaign.campaignName}｜${dateRange}`
+    : campaign.campaignName;
 
     campaignSelect.appendChild(
       option
