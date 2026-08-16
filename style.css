@@ -1219,3 +1219,50 @@ textarea{
   font-size:12px;
   line-height:1.6;
 }
+/* =====================================================
+   Campaign selector spacing
+   ===================================================== */
+
+/* 團購活動選單 */
+#campaignSelect {
+  margin-bottom: 0;
+}
+
+
+/* 團購期間資訊 */
+#campaignInfo {
+  margin-top: 10px;
+  margin-bottom: 24px;
+}
+
+
+/* 團購期間整列 */
+.campaign-period {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  font-size: 14px;
+  line-height: 1.5;
+
+  color: #9a8f82;
+}
+
+
+/* 「團購期間」 */
+.campaign-period-label {
+  font-weight: 600;
+}
+
+
+/* 日期 */
+.campaign-period-date {
+  font-weight: 500;
+}
+
+
+/* LINE 名稱標題 */
+#searchCard label[for="customerSelect"] {
+  display: block;
+  margin-bottom: 10px;
+}
