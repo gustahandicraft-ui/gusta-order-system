@@ -271,137 +271,134 @@ async function init(){
 // Render campaign selector
 // =====================================================
 
-function renderCampaignSelector(){
+function renderCampaignSelector() {
 
-  const campaignSelect =
-    document.getElementById(
-      "campaignSelect"
+  if (!campaignSelect) {
+    return;
+  }
+
+  campaignSelect.innerHTML = "";
+
+
+  // 沒有任何可用活動
+  if (!campaigns.length) {
+
+    const option =
+      document.createElement("option");
+
+    option.value = "";
+    option.textContent =
+      "目前沒有可查詢的團購活動";
+
+    campaignSelect.appendChild(option);
+
+    campaignSelect.disabled = true;
+
+    selectedCampaignCode = "";
+
+    customerSelect.innerHTML =
+      `<option value="">
+        目前沒有可查詢的團購活動
+      </option>`;
+
+    customerSelect.disabled = true;
+
+    loadOrderButton.disabled = true;
+
+    return;
+  }
+
+
+  campaignSelect.disabled = false;
+
+
+  // =====================================================
+  // 只有一個活動 → 自動選擇
+  // =====================================================
+
+  if (campaigns.length === 1) {
+
+    const campaign =
+      campaigns[0];
+
+    const option =
+      document.createElement("option");
+
+    option.value =
+      campaign.campaignCode;
+
+    option.textContent =
+      campaign.campaignName;
+
+    campaignSelect.appendChild(option);
+
+
+    selectedCampaignCode =
+      campaign.campaignCode;
+
+    campaignSelect.value =
+      selectedCampaignCode;
+
+
+    renderCampaignInfo();
+
+
+    // 自動讀取這一團的 LINE 名稱
+    loadCampaignCustomers(
+      selectedCampaignCode
     );
 
-
-  campaignSelect.innerHTML = `
-
-    <option value="">
-      請選擇團購活動
-    </option>
-
-  `;
+    return;
+  }
 
 
-  campaigns.forEach(
-    campaign=>{
+  // =====================================================
+  // 多個活動 → 讓客人選擇
+  // =====================================================
 
-      const option =
-        document.createElement(
-          "option"
-        );
+  const placeholder =
+    document.createElement("option");
 
+  placeholder.value = "";
+  placeholder.textContent =
+    "請選擇團購活動";
 
-      option.value =
-        campaign.campaignCode;
-
-
-      let text =
-        "";
-
-
-      if(
-        campaign.brand
-      ){
-
-        text +=
-          campaign.brand;
-
-      }
-
-
-      if(
-        campaign.campaignName
-      ){
-
-        if(text){
-
-          text +=
-            "｜";
-
-        }
-
-
-        text +=
-          campaign.campaignName;
-
-      }
-
-
-      if(
-        campaign.status
-      ){
-
-        text +=
-          `（${campaign.status}）`;
-
-      }
-
-
-      option.textContent =
-        text;
-
-
-      campaignSelect.appendChild(
-        option
-      );
-
-    }
+  campaignSelect.appendChild(
+    placeholder
   );
 
 
-  // 記住上次使用的團購
-  try{
+  campaigns.forEach(campaign => {
 
-    const lastCampaign =
-      localStorage.getItem(
-        "gustaLastCampaign"
-      );
+    const option =
+      document.createElement("option");
 
+    option.value =
+      campaign.campaignCode;
 
-    if(
-      lastCampaign
-      &&
-      campaigns.some(
-        campaign =>
-          String(
-            campaign.campaignCode
-          ) ===
-          String(
-            lastCampaign
-          )
-      )
-    ){
+    // 只顯示活動名稱
+    option.textContent =
+      campaign.campaignName;
 
-      campaignSelect.value =
-        lastCampaign;
-
-
-      campaignSelect.dispatchEvent(
-        new Event(
-          "change"
-        )
-      );
-
-    }
-
-  }
-  catch(err){
-
-    console.warn(
-      "無法讀取上次團購活動",
-      err
+    campaignSelect.appendChild(
+      option
     );
 
-  }
+  });
+
+
+  selectedCampaignCode = "";
+
+  customerSelect.innerHTML =
+    `<option value="">
+      請先選擇團購活動
+    </option>`;
+
+  customerSelect.disabled = true;
+
+  loadOrderButton.disabled = true;
 
 }
-
 
 // =====================================================
 // Campaign changed
