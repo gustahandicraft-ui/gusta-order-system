@@ -483,102 +483,111 @@ async function handleCampaignChange(
 // Campaign info
 // =====================================================
 
-function renderCampaignInfo(
-  campaign
-){
+function renderCampaignInfo() {
 
-  const root =
-    document.getElementById(
-      "campaignInfo"
+  if (!campaignInfo) {
+    return;
+  }
+
+  if (!selectedCampaignCode) {
+    campaignInfo.classList.add("hidden");
+    campaignInfo.innerHTML = "";
+    return;
+  }
+
+  const campaign =
+    campaigns.find(
+      item =>
+        String(item.campaignCode) ===
+        String(selectedCampaignCode)
     );
 
-
-  if(!root){
-
+  if (!campaign) {
+    campaignInfo.classList.add("hidden");
+    campaignInfo.innerHTML = "";
     return;
-
   }
 
 
-  if(!campaign){
-
-    root.innerHTML =
-      "";
-
-
-    root.classList.add(
-      "hidden"
+  const startDate =
+    formatCampaignDate(
+      campaign.startDate
     );
 
-
-    return;
-
-  }
-
-
-  const dates =
-    formatCampaignRange(
-      campaign.startDate,
+  const endDate =
+    formatCampaignDate(
       campaign.endDate
     );
 
 
-  root.innerHTML = `
+  let dateText = "";
 
-    <div class="campaign-info-brand">
-      ${escapeHtml(
-        campaign.brand ||
-        "Gusta"
-      )}
+  if (startDate && endDate) {
+
+    dateText =
+      `${startDate}－${endDate}`;
+
+  }
+  else if (startDate) {
+
+    dateText =
+      `${startDate} 起`;
+
+  }
+  else if (endDate) {
+
+    dateText =
+      `至 ${endDate}`;
+
+  }
+
+
+  if (!dateText) {
+
+    campaignInfo.classList.add("hidden");
+    campaignInfo.innerHTML = "";
+    return;
+
+  }
+
+
+  campaignInfo.innerHTML = `
+    <div class="campaign-period">
+      <span class="campaign-period-label">
+        團購期間
+      </span>
+
+      <span class="campaign-period-date">
+        ${escapeHtml(dateText)}
+      </span>
     </div>
-
-
-    <div class="campaign-info-name">
-      ${escapeHtml(
-        campaign.campaignName ||
-        ""
-      )}
-    </div>
-
-
-    <div class="campaign-info-meta">
-
-      ${
-        campaign.status
-          ? `
-              <span>
-                ${escapeHtml(
-                  campaign.status
-                )}
-              </span>
-            `
-          : ""
-      }
-
-
-      ${
-        dates
-          ? `
-              <span>
-                ${escapeHtml(
-                  dates
-                )}
-              </span>
-            `
-          : ""
-      }
-
-    </div>
-
   `;
 
-
-  root.classList.remove(
-    "hidden"
-  );
+  campaignInfo.classList.remove("hidden");
 
 }
 
+
+function formatCampaignDate(value) {
+
+  if (!value) {
+    return "";
+  }
+
+  const date =
+    new Date(value);
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return "";
+  }
+
+  return `${date.getMonth() + 1}/${date.getDate()}`;
+
+}
 
 // =====================================================
 // Load customers for campaign
