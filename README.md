@@ -1,2 +1,2 @@
-# gusta-order-system
+# gusta-portal
 Gusta Order Confirmation System
