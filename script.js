@@ -278,63 +278,89 @@ function renderCampaignSelector(){
       "campaignSelect"
     );
 
+
   if(!campaignSelect){
     return;
   }
 
-  campaignSelect.innerHTML = "";
 
+  campaignSelect.innerHTML =
+    "";
+
+
+  // =====================================================
   // 沒有活動
-  if(campaigns.length === 0){
+  // =====================================================
+
+  if(
+    campaigns.length === 0
+  ){
 
     const option =
       document.createElement(
         "option"
       );
 
-    option.value = "";
-   const dateRange =
-  formatCampaignRange(
-    campaign.startDate,
-    campaign.endDate
-  );
 
-option.textContent =
-  dateRange
-    ? `${campaign.campaignName}｜${dateRange}`
-    : campaign.campaignName;
+    option.value =
+      "";
+
+
+    option.textContent =
+      "目前沒有可查詢的團購活動";
+
 
     campaignSelect.appendChild(
       option
     );
 
-    campaignSelect.disabled = true;
 
-    selectedCampaign = null;
+    campaignSelect.disabled =
+      true;
+
+
+    selectedCampaign =
+      null;
+
 
     resetCustomerSelector();
 
-    renderCampaignInfo(null);
+
+    renderCampaignInfo(
+      null
+    );
+
 
     return;
+
   }
 
-  campaignSelect.disabled = false;
+
+  campaignSelect.disabled =
+    false;
 
 
+  // =====================================================
   // 只有一個活動
-  if(campaigns.length === 1){
+  // =====================================================
+
+  if(
+    campaigns.length === 1
+  ){
 
     const campaign =
       campaigns[0];
+
 
     const option =
       document.createElement(
         "option"
       );
 
+
     option.value =
       campaign.campaignCode;
+
 
     const dateRange =
       formatCampaignRange(
@@ -342,24 +368,30 @@ option.textContent =
         campaign.endDate
       );
 
+
     option.textContent =
       dateRange
         ? `${campaign.campaignName}｜${dateRange}`
         : campaign.campaignName;
 
+
     campaignSelect.appendChild(
       option
     );
 
+
     campaignSelect.value =
       campaign.campaignCode;
+
 
     selectedCampaign =
       campaign;
 
+
     renderCampaignInfo(
       campaign
     );
+
 
     try{
 
@@ -378,24 +410,34 @@ option.textContent =
 
     }
 
+
     loadCampaignCustomers(
       campaign.campaignCode
     );
 
+
     return;
+
   }
 
 
+  // =====================================================
   // 多個活動
+  // =====================================================
+
   const placeholder =
     document.createElement(
       "option"
     );
 
-  placeholder.value = "";
+
+  placeholder.value =
+    "";
+
 
   placeholder.textContent =
     "請選擇團購活動";
+
 
   campaignSelect.appendChild(
     placeholder
@@ -410,8 +452,10 @@ option.textContent =
           "option"
         );
 
+
       option.value =
         campaign.campaignCode;
+
 
       const dateRange =
         formatCampaignRange(
@@ -419,10 +463,12 @@ option.textContent =
           campaign.endDate
         );
 
+
       option.textContent =
         dateRange
           ? `${campaign.campaignName}｜${dateRange}`
           : campaign.campaignName;
+
 
       campaignSelect.appendChild(
         option
@@ -432,8 +478,13 @@ option.textContent =
   );
 
 
+  // =====================================================
   // 恢復上次選擇
-  let lastCampaign = "";
+  // =====================================================
+
+  let lastCampaign =
+    "";
+
 
   try{
 
@@ -454,7 +505,8 @@ option.textContent =
 
 
   if(
-    lastCampaign &&
+    lastCampaign
+    &&
     campaigns.some(
       campaign =>
         String(
@@ -469,6 +521,7 @@ option.textContent =
     campaignSelect.value =
       lastCampaign;
 
+
     campaignSelect.dispatchEvent(
       new Event(
         "change"
@@ -478,11 +531,16 @@ option.textContent =
   }
   else{
 
-    selectedCampaign = null;
+    selectedCampaign =
+      null;
+
 
     resetCustomerSelector();
 
-    renderCampaignInfo(null);
+
+    renderCampaignInfo(
+      null
+    );
 
   }
 
