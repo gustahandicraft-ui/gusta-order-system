@@ -2,8 +2,8 @@
 // API
 // =====================================================
 
-const API =
-  "https://script.google.com/macros/s/AKfycbw3Vyj9GMhbLPE01yeg2tLOuBU0q3AScZJ_mLtQPsu2441O065Al1F4RusGKbqCb6s5/exec?action=init";
+const API_BASE =
+  "https://script.google.com/macros/s/AKfycbw3Vyj9GMhbLPE01yeg2tLOuBU0q3AScZJ_mLtQPsu2441O065Al1F4RusGKbqCb6s5/exec";
 
 
 // =====================================================
@@ -24,6 +24,7 @@ const loadOrderButton =
   document.getElementById(
     "loadOrder"
   );
+
 const trackOrderButton =
   document.getElementById(
     "trackOrderButton"
@@ -38,6 +39,770 @@ const trackingContent =
   document.getElementById(
     "trackingContent"
   );
+
+const orderArea =
+  document.getElementById(
+    "orderArea"
+  );
+
+
+// =====================================================
+// System state
+// =====================================================
+
+let initialData = null;
+
+let groupedAddons = {};
+
+let currentOrder = null;
+
+let addonCart = {};
+
+let campaigns = [];
+
+let selectedCampaign = null;
+
+
+// =====================================================
+// Campaign selector
+// =====================================================
+
+function createCampaignSelector(){
+
+  if(
+    document.getElementById(
+      "campaignSelect"
+    )
+  ){
+    return;
+  }
+
+
+  const searchCard =
+    document.getElementById(
+      "searchCard"
+    );
+
+
+  const customerLabel =
+    document.querySelector(
+      'label[for="customerSelect"]'
+    );
+
+
+  const block =
+    document.createElement(
+      "div"
+    );
+
+
+  block.id =
+    "campaignBlock";
+
+
+  block.innerHTML = `
+
+    <label for="campaignSelect">
+      團購活動
+    </label>
+
+    <select id="campaignSelect">
+
+      <option value="">
+        正在載入團購活動...
+      </option>
+
+    </select>
+
+
+    <div
+      id="campaignInfo"
+      class="campaign-info hidden"
+    ></div>
+
+  `;
+
+
+  if(customerLabel){
+
+    searchCard.insertBefore(
+      block,
+      customerLabel
+    );
+
+  }
+  else{
+
+    searchCard.prepend(
+      block
+    );
+
+  }
+
+
+  document
+    .getElementById(
+      "campaignSelect"
+    )
+    .addEventListener(
+      "change",
+      handleCampaignChange
+    );
+
+}
+
+
+// =====================================================
+// Init
+// =====================================================
+
+async function init(){
+
+  createCampaignSelector();
+
+  resetCustomerSelector();
+
+
+  try{
+
+    status.textContent =
+      "正在載入團購資料...";
+
+
+    const res =
+      await fetch(
+        `${API_BASE}?action=init`
+      );
+
+
+    if(!res.ok){
+
+      throw new Error(
+        "無法連線至訂單系統"
+      );
+
+    }
+
+
+    const data =
+      await res.json();
+
+
+    if(!data.success){
+
+      throw new Error(
+        data.message ||
+        "API 回傳失敗"
+      );
+
+    }
+
+
+    initialData =
+      data;
+
+
+    campaigns =
+      Array.isArray(
+        data.campaigns
+      )
+        ? data.campaigns
+        : [];
+
+
+    groupedAddons =
+      groupAddonProducts(
+        data.addons || []
+      );
+
+
+    console.log(
+      "API 初始化資料：",
+      data
+    );
+
+
+    console.log(
+      "團購活動：",
+      campaigns
+    );
+
+
+    console.log(
+      "加購商品分組：",
+      groupedAddons
+    );
+
+
+    renderCampaignSelector();
+
+
+    if(
+      campaigns.length === 0
+    ){
+
+      status.textContent =
+        "目前沒有可查詢的團購活動。";
+
+      return;
+
+    }
+
+
+    status.textContent =
+      "";
+
+  }
+  catch(err){
+
+    console.error(err);
+
+
+    status.textContent =
+      err.message ||
+      "目前無法讀取團購資料，請稍後再試。";
+
+  }
+
+}
+
+
+// =====================================================
+// Render campaign selector
+// =====================================================
+
+function renderCampaignSelector(){
+
+  const campaignSelect =
+    document.getElementById(
+      "campaignSelect"
+    );
+
+
+  campaignSelect.innerHTML = `
+
+    <option value="">
+      請選擇團購活動
+    </option>
+
+  `;
+
+
+  campaigns.forEach(
+    campaign=>{
+
+      const option =
+        document.createElement(
+          "option"
+        );
+
+
+      option.value =
+        campaign.campaignCode;
+
+
+      let text =
+        "";
+
+
+      if(
+        campaign.brand
+      ){
+
+        text +=
+          campaign.brand;
+
+      }
+
+
+      if(
+        campaign.campaignName
+      ){
+
+        if(text){
+
+          text +=
+            "｜";
+
+        }
+
+
+        text +=
+          campaign.campaignName;
+
+      }
+
+
+      if(
+        campaign.status
+      ){
+
+        text +=
+          `（${campaign.status}）`;
+
+      }
+
+
+      option.textContent =
+        text;
+
+
+      campaignSelect.appendChild(
+        option
+      );
+
+    }
+  );
+
+
+  // 記住上次使用的團購
+  try{
+
+    const lastCampaign =
+      localStorage.getItem(
+        "gustaLastCampaign"
+      );
+
+
+    if(
+      lastCampaign
+      &&
+      campaigns.some(
+        campaign =>
+          String(
+            campaign.campaignCode
+          ) ===
+          String(
+            lastCampaign
+          )
+      )
+    ){
+
+      campaignSelect.value =
+        lastCampaign;
+
+
+      campaignSelect.dispatchEvent(
+        new Event(
+          "change"
+        )
+      );
+
+    }
+
+  }
+  catch(err){
+
+    console.warn(
+      "無法讀取上次團購活動",
+      err
+    );
+
+  }
+
+}
+
+
+// =====================================================
+// Campaign changed
+// =====================================================
+
+async function handleCampaignChange(
+  event
+){
+
+  const campaignCode =
+    event.target.value;
+
+
+  hideCurrentOrder();
+
+
+  if(!campaignCode){
+
+    selectedCampaign =
+      null;
+
+
+    resetCustomerSelector();
+
+
+    renderCampaignInfo(
+      null
+    );
+
+
+    return;
+
+  }
+
+
+  selectedCampaign =
+    campaigns.find(
+      campaign =>
+        String(
+          campaign.campaignCode
+        ) ===
+        String(
+          campaignCode
+        )
+    ) || null;
+
+
+  renderCampaignInfo(
+    selectedCampaign
+  );
+
+
+  try{
+
+    localStorage.setItem(
+      "gustaLastCampaign",
+      campaignCode
+    );
+
+  }
+  catch(err){
+
+    console.warn(
+      "無法儲存團購活動",
+      err
+    );
+
+  }
+
+
+  await loadCampaignCustomers(
+    campaignCode
+  );
+
+}
+
+
+// =====================================================
+// Campaign info
+// =====================================================
+
+function renderCampaignInfo(
+  campaign
+){
+
+  const root =
+    document.getElementById(
+      "campaignInfo"
+    );
+
+
+  if(!root){
+
+    return;
+
+  }
+
+
+  if(!campaign){
+
+    root.innerHTML =
+      "";
+
+
+    root.classList.add(
+      "hidden"
+    );
+
+
+    return;
+
+  }
+
+
+  const dates =
+    formatCampaignRange(
+      campaign.startDate,
+      campaign.endDate
+    );
+
+
+  root.innerHTML = `
+
+    <div class="campaign-info-brand">
+      ${escapeHtml(
+        campaign.brand ||
+        "Gusta"
+      )}
+    </div>
+
+
+    <div class="campaign-info-name">
+      ${escapeHtml(
+        campaign.campaignName ||
+        ""
+      )}
+    </div>
+
+
+    <div class="campaign-info-meta">
+
+      ${
+        campaign.status
+          ? `
+              <span>
+                ${escapeHtml(
+                  campaign.status
+                )}
+              </span>
+            `
+          : ""
+      }
+
+
+      ${
+        dates
+          ? `
+              <span>
+                ${escapeHtml(
+                  dates
+                )}
+              </span>
+            `
+          : ""
+      }
+
+    </div>
+
+  `;
+
+
+  root.classList.remove(
+    "hidden"
+  );
+
+}
+
+
+// =====================================================
+// Load customers for campaign
+// =====================================================
+
+async function loadCampaignCustomers(
+  campaignCode
+){
+
+  resetCustomerSelector();
+
+
+  status.textContent =
+    "正在載入這一團的訂單名單...";
+
+
+  try{
+
+    const url =
+      `${API_BASE}?action=customers`
+      +
+      `&campaignCode=${encodeURIComponent(
+        campaignCode
+      )}`;
+
+
+    const res =
+      await fetch(
+        url
+      );
+
+
+    if(!res.ok){
+
+      throw new Error(
+        "無法讀取訂單名單"
+      );
+
+    }
+
+
+    const data =
+      await res.json();
+
+
+    if(!data.success){
+
+      throw new Error(
+        data.message ||
+        "訂單名單讀取失敗"
+      );
+
+    }
+
+
+    const customers =
+      Array.isArray(
+        data.customers
+      )
+        ? data.customers
+        : [];
+
+
+    select.innerHTML = `
+
+      <option value="">
+        請選擇您的 LINE 名稱
+      </option>
+
+    `;
+
+
+    customers.forEach(
+      customer=>{
+
+        const option =
+          document.createElement(
+            "option"
+          );
+
+
+        option.value =
+          customer.orderId;
+
+
+        option.textContent =
+          customer.lineName;
+
+
+        select.appendChild(
+          option
+        );
+
+      }
+    );
+
+
+    select.disabled =
+      false;
+
+
+    loadOrderButton.disabled =
+      false;
+
+
+    trackOrderButton.disabled =
+      false;
+
+
+    if(
+      customers.length === 0
+    ){
+
+      status.textContent =
+        "這個團購目前沒有可查詢的訂單。";
+
+    }
+    else{
+
+      status.textContent =
+        "";
+
+    }
+
+  }
+  catch(err){
+
+    console.error(err);
+
+
+    status.textContent =
+      err.message ||
+      "目前無法讀取這個團購的訂單名單。";
+
+
+    resetCustomerSelector();
+
+  }
+
+}
+
+
+// =====================================================
+// Reset customer selector
+// =====================================================
+
+function resetCustomerSelector(){
+
+  select.innerHTML = `
+
+    <option value="">
+      請先選擇團購活動
+    </option>
+
+  `;
+
+
+  select.disabled =
+    true;
+
+
+  loadOrderButton.disabled =
+    true;
+
+
+  trackOrderButton.disabled =
+    true;
+
+
+  currentOrder =
+    null;
+
+
+  addonCart =
+    {};
+
+}
+
+
+// =====================================================
+// Hide previous order
+// =====================================================
+
+function hideCurrentOrder(){
+
+  if(orderArea){
+
+    orderArea.classList.add(
+      "hidden"
+    );
+
+  }
+
+
+  if(trackingArea){
+
+    trackingArea.classList.add(
+      "hidden"
+    );
+
+  }
+
+
+  const successArea =
+    document.getElementById(
+      "successArea"
+    );
+
+
+  if(successArea){
+
+    successArea.classList.add(
+      "hidden"
+    );
+
+  }
+
+
+  status.textContent =
+    "";
+
+}
+
+
 // =====================================================
 // Track order button
 // =====================================================
@@ -47,9 +812,18 @@ trackOrderButton
     "click",
     async()=>{
 
-
       const orderId =
         select.value;
+
+
+      if(!selectedCampaign){
+
+        status.textContent =
+          "請先選擇團購活動。";
+
+        return;
+
+      }
 
 
       if(!orderId){
@@ -73,20 +847,21 @@ trackOrderButton
       try{
 
         const url =
-          API.replace(
-            "action=init",
-            "action=order"
-          )
+          `${API_BASE}?action=order`
           +
-          "&orderId="
-          +
-          encodeURIComponent(
+          `&orderId=${encodeURIComponent(
             orderId
-          );
+          )}`
+          +
+          `&campaignCode=${encodeURIComponent(
+            selectedCampaign.campaignCode
+          )}`;
 
 
         const res =
-          await fetch(url);
+          await fetch(
+            url
+          );
 
 
         if(!res.ok){
@@ -116,6 +891,26 @@ trackOrderButton
           data;
 
 
+        orderArea.classList.add(
+          "hidden"
+        );
+
+
+        const successArea =
+          document.getElementById(
+            "successArea"
+          );
+
+
+        if(successArea){
+
+          successArea.classList.add(
+            "hidden"
+          );
+
+        }
+
+
         renderTrackingStatus(
           data
         );
@@ -130,7 +925,6 @@ trackOrderButton
           block:"start"
         });
 
-
       }
       catch(err){
 
@@ -140,7 +934,6 @@ trackOrderButton
         status.textContent =
           err.message ||
           "目前無法查詢訂單狀態。";
-
 
       }
       finally{
@@ -152,121 +945,6 @@ trackOrderButton
 
     }
   );
-
-// =====================================================
-// System state
-// =====================================================
-
-let initialData = null;
-
-let groupedAddons = null;
-
-let currentOrder = null;
-
-let addonCart = {};
-
-
-// =====================================================
-// Init
-// =====================================================
-
-async function init(){
-
-  try{
-
-    status.textContent =
-      "正在載入訂單資料...";
-
-
-    const res =
-      await fetch(API);
-
-
-    if(!res.ok){
-
-      throw new Error(
-        "無法連線至訂單系統"
-      );
-
-    }
-
-
-    const data =
-      await res.json();
-
-
-    if(!data.success){
-
-      throw new Error(
-        data.message ||
-        "API 回傳失敗"
-      );
-
-    }
-
-
-    initialData = data;
-
-
-    groupedAddons =
-      groupAddonProducts(
-        data.addons || []
-      );
-
-
-    console.log(
-      "API 初始化資料：",
-      data
-    );
-
-    console.log(
-      "加購商品分組結果：",
-      groupedAddons
-    );
-
-
-    select.innerHTML = `
-      <option value="">
-        請選擇您的 LINE 名稱
-      </option>
-    `;
-
-
-    data.customers.forEach(
-      customer => {
-
-        const option =
-          document.createElement(
-            "option"
-          );
-
-        option.value =
-          customer.orderId;
-
-        option.textContent =
-          customer.lineName;
-
-        select.appendChild(
-          option
-        );
-
-      }
-    );
-
-
-    status.textContent = "";
-
-  }
-  catch(err){
-
-    console.error(err);
-
-    status.textContent =
-      "目前無法讀取訂單資料，請稍後再試。";
-
-  }
-
-}
 
 
 // =====================================================
@@ -280,6 +958,16 @@ loadOrderButton
 
       const orderId =
         select.value;
+
+
+      if(!selectedCampaign){
+
+        status.textContent =
+          "請先選擇團購活動。";
+
+        return;
+
+      }
 
 
       if(!orderId){
@@ -303,20 +991,21 @@ loadOrderButton
       try{
 
         const url =
-          API.replace(
-            "action=init",
-            "action=order"
-          )
+          `${API_BASE}?action=order`
           +
-          "&orderId="
-          +
-          encodeURIComponent(
+          `&orderId=${encodeURIComponent(
             orderId
-          );
+          )}`
+          +
+          `&campaignCode=${encodeURIComponent(
+            selectedCampaign.campaignCode
+          )}`;
 
 
         const res =
-          await fetch(url);
+          await fetch(
+            url
+          );
 
 
         if(!res.ok){
@@ -342,79 +1031,122 @@ loadOrderButton
         }
 
 
-currentOrder = data;
-
-addonCart = {};
-
-
-// =====================================================
-// 已確認訂單：鎖定，不可再次修改
-// =====================================================
-
-if(
-  data.master.confirmStatus === "已確認"
-){
-
-  // 隱藏編輯訂單區
-  document
-    .getElementById("orderArea")
-    .classList.add("hidden");
+        currentOrder =
+          data;
 
 
-  // 隱藏成功頁（避免之前操作殘留）
-  document
-    .getElementById("successArea")
-    .classList.add("hidden");
+        addonCart =
+          {};
 
 
-  // 直接顯示訂單狀態
-  renderTrackingStatus(data);
+        // ==========================================
+        // 已確認訂單：鎖定
+        // ==========================================
+
+        if(
+          data.master.confirmStatus ===
+          "已確認"
+        ){
+
+          orderArea.classList.add(
+            "hidden"
+          );
 
 
-  status.textContent =
-    "此訂單已完成確認，如需修改請聯絡 Gusta。";
+          const successArea =
+            document.getElementById(
+              "successArea"
+            );
 
 
-  trackingArea.scrollIntoView({
-    behavior:"smooth",
-    block:"start"
-  });
+          if(successArea){
+
+            successArea.classList.add(
+              "hidden"
+            );
+
+          }
 
 
-  return;
-}
+          renderTrackingStatus(
+            data
+          );
 
 
-// =====================================================
-// 尚未確認：正常進入訂單確認流程
-// =====================================================
-
-// 如果之前看過狀態，先收起來
-trackingArea
-  .classList
-  .add("hidden");
+          status.textContent =
+            "此訂單已完成確認，如需修改請聯絡 Gusta。";
 
 
-renderOrder(data);
-
-renderAllAddons();
-
-renderShipping();
-
-renderSummary();
+          trackingArea.scrollIntoView({
+            behavior:"smooth",
+            block:"start"
+          });
 
 
-document
-  .getElementById("submitArea")
-  .classList.remove("hidden");
+          return;
+
+        }
 
 
-status.textContent = "";
+        // ==========================================
+        // 尚未確認
+        // ==========================================
+
+        trackingArea.classList.add(
+          "hidden"
+        );
+
+
+        renderOrder(
+          data
+        );
+
+
+        renderAllAddons();
+
+        renderShipping();
+
+        renderSummary();
+
+
+        document
+          .getElementById(
+            "submitArea"
+          )
+          .classList.remove(
+            "hidden"
+          );
+
+
+        const bankArea =
+          document.getElementById(
+            "bankArea"
+          );
+
+
+        if(bankArea){
+
+          bankArea.classList.remove(
+            "hidden"
+          );
+
+        }
+
+
+        status.textContent =
+          "";
+
+
+        orderArea.scrollIntoView({
+          behavior:"smooth",
+          block:"start"
+        });
 
       }
       catch(err){
 
         console.error(err);
+
 
         status.textContent =
           err.message ||
@@ -441,6 +1173,7 @@ function renderOrder(data){
   const master =
     data.master;
 
+
   const items =
     data.items || [];
 
@@ -461,35 +1194,41 @@ function renderOrder(data){
       `訂單編號 ${master.orderId}`;
 
 
-  const groupedItems = {};
+  const groupedItems =
+    {};
 
 
-  items.forEach(item=>{
+  items.forEach(
+    item=>{
 
-    const productName =
-      String(
-        item.product || ""
-      ).trim();
+      const productName =
+        String(
+          item.product || ""
+        ).trim();
 
 
-    if(
-      !groupedItems[
-        productName
-      ]
-    ){
+      if(
+        !groupedItems[
+          productName
+        ]
+      ){
+
+        groupedItems[
+          productName
+        ] =
+          [];
+
+      }
+
 
       groupedItems[
         productName
-      ] = [];
+      ].push(
+        item
+      );
 
     }
-
-
-    groupedItems[
-      productName
-    ].push(item);
-
-  });
+  );
 
 
   const itemBox =
@@ -498,17 +1237,19 @@ function renderOrder(data){
     );
 
 
-  itemBox.innerHTML = "";
+  itemBox.innerHTML =
+    "";
 
 
   Object
-    .entries(groupedItems)
+    .entries(
+      groupedItems
+    )
     .forEach(
       ([
         productName,
         productItems
       ])=>{
-
 
         const group =
           document.createElement(
@@ -607,15 +1348,13 @@ function renderOrder(data){
       );
 
 
-  document
-    .getElementById(
-      "orderArea"
-    )
-    .classList.remove(
-      "hidden"
-    );
+  orderArea.classList.remove(
+    "hidden"
+  );
 
 }
+
+
 // =====================================================
 // Render tracking status
 // =====================================================
@@ -670,17 +1409,53 @@ function renderTrackingStatus(data){
 
 
   trackingContent.innerHTML = `
-<div class="tracking-locked-notice">
 
-  <strong>
-    ✓ 此訂單已完成確認
-  </strong>
+    ${
+      confirmDone
+        ? `
 
-  <p>
-    訂單內容已鎖定，如需修改請直接聯絡 Gusta。
-  </p>
+          <div class="tracking-locked-notice">
 
-</div>
+            <strong>
+              ✓ 此訂單已完成確認
+            </strong>
+
+            <p>
+              訂單內容已鎖定，如需修改請直接聯絡 Gusta。
+            </p>
+
+          </div>
+
+        `
+        : ""
+    }
+
+
+    ${
+      selectedCampaign
+        ? `
+
+          <div class="tracking-campaign-name">
+
+            ${
+              selectedCampaign.brand
+                ? escapeHtml(
+                    selectedCampaign.brand
+                  ) + "｜"
+                : ""
+            }
+
+            ${escapeHtml(
+              selectedCampaign.campaignName ||
+              ""
+            )}
+
+          </div>
+
+        `
+        : ""
+    }
+
 
     <div class="tracking-order-head">
 
@@ -697,6 +1472,7 @@ function renderTrackingStatus(data){
         </strong>
 
       </div>
+
 
       <div class="tracking-total">
 
@@ -804,9 +1580,11 @@ function renderTrackingStatus(data){
               </span>
 
               <strong>
-             ${escapeHtml(
-  formatDateTime(shippedAt)
-)}
+                ${escapeHtml(
+                  formatDateTime(
+                    shippedAt
+                  )
+                )}
               </strong>
 
             </div>
@@ -820,13 +1598,17 @@ function renderTrackingStatus(data){
   `;
 
 
-  trackingArea
-    .classList
-    .remove(
-      "hidden"
-    );
+  trackingArea.classList.remove(
+    "hidden"
+  );
 
 }
+
+
+// =====================================================
+// Tracking step
+// =====================================================
+
 function renderTrackingStep(
   label,
   done,
@@ -846,14 +1628,19 @@ function renderTrackingStep(
 
       </div>
 
+
       <div class="tracking-step-text">
 
         <span>
-          ${escapeHtml(label)}
+          ${escapeHtml(
+            label
+          )}
         </span>
 
         <strong>
-          ${escapeHtml(text)}
+          ${escapeHtml(
+            text
+          )}
         </strong>
 
       </div>
@@ -871,237 +1658,291 @@ function renderTrackingStep(
 
 function groupAddonProducts(addons){
 
-  const groups = {};
+  const groups =
+    {};
 
 
-  addons.forEach(item=>{
+  addons.forEach(
+    item=>{
 
-    const name =
-      String(
-        item.name || ""
-      ).trim();
-
-
-    const spec =
-      String(
-        item.spec || ""
-      ).trim();
+      const name =
+        String(
+          item.name || ""
+        ).trim();
 
 
-    // Elastic Shaft
+      const spec =
+        String(
+          item.spec || ""
+        ).trim();
 
-    if(
-      name.includes(
-        "彈性軸"
-      )
-    ){
+
+      // ===============================================
+      // Elastic Shaft
+      // ===============================================
 
       if(
-        !groups.elastic
+        name.includes(
+          "彈性軸"
+        )
       ){
 
-        groups.elastic = {
+        if(
+          !groups.elastic
+        ){
 
-          title:
-            "Smile Yarn Holder 專用彈性軸",
+          groups.elastic = {
 
-          options:[]
+            title:
+              "Smile Yarn Holder 專用彈性軸",
 
-        };
+            options:[]
+
+          };
+
+        }
+
+
+        let label =
+          spec;
+
+
+        if(!label){
+
+          if(
+            name.includes(
+              "加長"
+            )
+          ){
+
+            label =
+              "加長";
+
+          }
+          else if(
+            name.includes(
+              "標準"
+            )
+          ){
+
+            label =
+              "標準";
+
+          }
+          else{
+
+            label =
+              name;
+
+          }
+
+        }
+
+
+        groups
+          .elastic
+          .options
+          .push({
+
+            id:
+              item.id,
+
+            label,
+
+            price:
+              Number(
+                item.price
+              ) || 0
+
+          });
+
+
+        return;
 
       }
 
 
-      let label =
-        spec;
+      // ===============================================
+      // Keyring
+      // ===============================================
+
+      if(
+        name.includes(
+          "收納鑰匙圈"
+        )
+      ){
+
+        if(
+          !groups.keyring
+        ){
+
+          groups.keyring = {
+
+            title:
+              "桶線造型收納鑰匙圈",
+
+            colors:[]
+
+          };
+
+        }
 
 
-      if(!label){
+        groups
+          .keyring
+          .colors
+          .push({
+
+            id:
+              item.id,
+
+            color:
+              spec,
+
+            price:
+              Number(
+                item.price
+              ) || 0
+
+          });
+
+
+        return;
+
+      }
+
+
+      // ===============================================
+      // Clicker
+      // ===============================================
+
+      if(
+        name.includes(
+          "舒壓按鍵"
+        )
+      ){
+
+        if(
+          !groups.clicker
+        ){
+
+          groups.clicker = {
+
+            title:
+              "桶線造型舒壓按鍵吊飾",
+
+            modes:{}
+
+          };
+
+        }
+
+
+        let mode =
+          "其他";
+
 
         if(
           name.includes(
-            "加長"
+            "高亢"
           )
         ){
 
-          label = "加長";
+          mode =
+            "高亢";
 
         }
         else if(
           name.includes(
-            "標準"
+            "低沉"
           )
         ){
 
-          label = "標準";
-
-        }
-        else{
-
-          label = name;
+          mode =
+            "低沉";
 
         }
 
-      }
 
+        if(
+          !groups
+            .clicker
+            .modes[
+              mode
+            ]
+        ){
 
-      groups
-        .elastic
-        .options
-        .push({
+          groups
+            .clicker
+            .modes[
+              mode
+            ] =
+            [];
 
-          id:item.id,
+        }
 
-          label,
-
-          price:
-            Number(
-              item.price
-            ) || 0
-
-        });
-
-
-      return;
-
-    }
-
-
-    // Keyring
-
-    if(
-      name.includes(
-        "收納鑰匙圈"
-      )
-    ){
-
-      if(
-        !groups.keyring
-      ){
-
-        groups.keyring = {
-
-          title:
-            "桶線造型收納鑰匙圈",
-
-          colors:[]
-
-        };
-
-      }
-
-
-      groups
-        .keyring
-        .colors
-        .push({
-
-          id:item.id,
-
-          color:spec,
-
-          price:
-            Number(
-              item.price
-            ) || 0
-
-        });
-
-
-      return;
-
-    }
-
-
-    // Clicker
-
-    if(
-      name.includes(
-        "舒壓按鍵"
-      )
-    ){
-
-      if(
-        !groups.clicker
-      ){
-
-        groups.clicker = {
-
-          title:
-            "桶線造型舒壓按鍵吊飾",
-
-          modes:{}
-
-        };
-
-      }
-
-
-      let mode =
-        "其他";
-
-
-      if(
-        name.includes(
-          "高亢"
-        )
-      ){
-
-        mode = "高亢";
-
-      }
-      else if(
-        name.includes(
-          "低沉"
-        )
-      ){
-
-        mode = "低沉";
-
-      }
-
-
-      if(
-        !groups
-          .clicker
-          .modes[
-            mode
-          ]
-      ){
 
         groups
           .clicker
           .modes[
             mode
-          ] = [];
+          ]
+          .push({
+
+            id:
+              item.id,
+
+            color:
+              spec,
+
+            price:
+              Number(
+                item.price
+              ) || 0
+
+          });
+
+
+        return;
 
       }
 
 
-      groups
-        .clicker
-        .modes[
-          mode
-        ]
-        .push({
+      // ===============================================
+      // 其他加購
+      // 未來其他團購使用
+      // ===============================================
 
-          id:item.id,
+      if(
+        !groups.other
+      ){
 
-          color:spec,
+        groups.other =
+          [];
 
-          price:
-            Number(
-              item.price
-            ) || 0
-
-        });
+      }
 
 
-      return;
+      groups.other.push({
+
+        id:
+          item.id,
+
+        title:
+          name,
+
+        label:
+          spec || name,
+
+        price:
+          Number(
+            item.price
+          ) || 0
+
+      });
 
     }
-
-  });
+  );
 
 
   return groups;
@@ -1121,7 +1962,8 @@ function renderAllAddons(){
     );
 
 
-  root.innerHTML = "";
+  root.innerHTML =
+    "";
 
 
   if(
@@ -1139,17 +1981,20 @@ function renderAllAddons(){
         groupedAddons
           .elastic
           .options
-          .map(item=>({
+          .map(
+            item=>({
 
-            id:item.id,
+              id:
+                item.id,
 
-            label:
-              item.label,
+              label:
+                item.label,
 
-            price:
-              item.price
+              price:
+                item.price
 
-          }))
+            })
+          )
 
       )
 
@@ -1173,17 +2018,20 @@ function renderAllAddons(){
         groupedAddons
           .keyring
           .colors
-          .map(item=>({
+          .map(
+            item=>({
 
-            id:item.id,
+              id:
+                item.id,
 
-            label:
-              item.color,
+              label:
+                item.color,
 
-            price:
-              item.price
+              price:
+                item.price
 
-          }))
+            })
+          )
 
       )
 
@@ -1203,7 +2051,10 @@ function renderAllAddons(){
           .modes
       )
       .forEach(
-        ([mode,colors])=>{
+        ([
+          mode,
+          colors
+        ])=>{
 
           root.appendChild(
 
@@ -1214,7 +2065,8 @@ function renderAllAddons(){
               colors.map(
                 item=>({
 
-                  id:item.id,
+                  id:
+                    item.id,
 
                   label:
                     item.color,
@@ -1235,13 +2087,68 @@ function renderAllAddons(){
   }
 
 
-  document
-    .getElementById(
-      "addonArea"
+  if(
+    Array.isArray(
+      groupedAddons.other
     )
-    .classList.remove(
+  ){
+
+    groupedAddons
+      .other
+      .forEach(
+        item=>{
+
+          root.appendChild(
+
+            createAddonSelector(
+
+              item.title,
+
+              [
+                {
+                  id:
+                    item.id,
+
+                  label:
+                    item.label,
+
+                  price:
+                    item.price
+                }
+              ]
+
+            )
+
+          );
+
+        }
+      );
+
+  }
+
+
+  const addonArea =
+    document.getElementById(
+      "addonArea"
+    );
+
+
+  if(
+    root.children.length > 0
+  ){
+
+    addonArea.classList.remove(
       "hidden"
     );
+
+  }
+  else{
+
+    addonArea.classList.add(
+      "hidden"
+    );
+
+  }
 
 }
 
@@ -1268,35 +2175,48 @@ function createAddonSelector(
   wrapper.innerHTML = `
 
     <div class="addon-title">
-      ${escapeHtml(title)}
+      ${escapeHtml(
+        title
+      )}
     </div>
 
     <div class="addon-field-label">
       規格
     </div>
 
+
     <select>
 
-      ${options.map(
-        item=>`
+      ${options
+        .map(
+          item=>`
 
-          <option
-            value="${item.id}"
-            data-price="${item.price}"
-            data-label="${escapeHtml(
-              item.label
-            )}"
-          >
-            ${escapeHtml(
-              item.label
-            )}
-            （NT$${money(
-              item.price
-            )}）
-          </option>
+            <option
+              value="${escapeAttribute(
+                item.id
+              )}"
+              data-price="${Number(
+                item.price || 0
+              )}"
+              data-label="${escapeAttribute(
+                item.label
+              )}"
+            >
 
-        `
-      ).join("")}
+              ${escapeHtml(
+                item.label
+              )}
+
+              （NT$${money(
+                item.price
+              )}）
+
+            </option>
+
+          `
+        )
+        .join("")
+      }
 
     </select>
 
@@ -1338,7 +2258,8 @@ function createAddonSelector(
   `;
 
 
-  let qty = 1;
+  let qty =
+    1;
 
 
   const qtyValue =
@@ -1378,6 +2299,7 @@ function createAddonSelector(
       ()=>{
 
         qty++;
+
 
         qtyValue.textContent =
           qty;
@@ -1420,11 +2342,19 @@ function createAddonSelector(
           price:
             Number(
               selected.dataset.price
-            ),
+            ) || 0,
 
           qty
 
         });
+
+
+        qty =
+          1;
+
+
+        qtyValue.textContent =
+          "1";
 
       }
     );
@@ -1450,7 +2380,9 @@ function addAddonToCart(item){
     addonCart[
       item.id
     ].qty +=
-      item.qty;
+      Number(
+        item.qty || 0
+      );
 
   }
   else{
@@ -1503,7 +2435,10 @@ function renderAddonCart(){
       "hidden"
     );
 
-    root.innerHTML = "";
+
+    root.innerHTML =
+      "";
+
 
     return;
 
@@ -1515,88 +2450,104 @@ function renderAddonCart(){
   );
 
 
-  root.innerHTML = "";
+  root.innerHTML =
+    "";
 
 
-  items.forEach(item=>{
+  items.forEach(
+    item=>{
 
-    const row =
-      document.createElement(
-        "div"
-      );
-
-
-    row.className =
-      "cart-item";
+      const row =
+        document.createElement(
+          "div"
+        );
 
 
-    row.innerHTML = `
+      row.className =
+        "cart-item";
 
-      <div>
 
-        <div class="cart-item-name">
-          ${escapeHtml(
-            item.name
-          )}
+      row.innerHTML = `
+
+        <div>
+
+          <div class="cart-item-name">
+            ${escapeHtml(
+              item.name
+            )}
+          </div>
+
+          <div class="cart-item-spec">
+
+            ${escapeHtml(
+              item.spec
+            )}
+
+            × ${Number(
+              item.qty
+            )}
+
+          </div>
+
         </div>
 
-        <div class="cart-item-spec">
-          ${escapeHtml(
-            item.spec
-          )}
-          × ${item.qty}
+
+        <div class="cart-item-right">
+
+          <strong>
+
+            NT$${money(
+              Number(
+                item.price || 0
+              )
+              *
+              Number(
+                item.qty || 0
+              )
+            )}
+
+          </strong>
+
+
+          <button
+            type="button"
+            class="remove-addon"
+          >
+            移除
+          </button>
+
         </div>
 
-      </div>
+      `;
 
 
-      <div class="cart-item-right">
-
-        <strong>
-          NT$${money(
-            item.price *
-            item.qty
-          )}
-        </strong>
-
-        <button
-          type="button"
-          class="remove-addon"
-        >
-          移除
-        </button>
-
-      </div>
-
-    `;
-
-
-    row
-      .querySelector(
-        ".remove-addon"
-      )
-      .addEventListener(
-        "click",
-        ()=>{
-
-          delete addonCart[
-            item.id
-          ];
-
-
-          renderAddonCart();
-
-          renderSummary();
-
-        }
-      );
-
-
-    root.appendChild(
       row
-    );
+        .querySelector(
+          ".remove-addon"
+        )
+        .addEventListener(
+          "click",
+          ()=>{
 
-  });
+            delete addonCart[
+              item.id
+            ];
+
+
+            renderAddonCart();
+
+            renderSummary();
+
+          }
+        );
+
+
+      root.appendChild(
+        row
+      );
+
+    }
+  );
 
 }
 
@@ -1608,7 +2559,9 @@ function renderAddonCart(){
 function renderShipping(){
 
   if(!initialData){
+
     return;
+
   }
 
 
@@ -1618,11 +2571,20 @@ function renderShipping(){
     );
 
 
-  root.innerHTML = "";
+  root.innerHTML =
+    "";
 
 
-  initialData.shipping.forEach(
-    shipping => {
+  const shippingMethods =
+    Array.isArray(
+      initialData.shipping
+    )
+      ? initialData.shipping
+      : [];
+
+
+  shippingMethods.forEach(
+    shipping=>{
 
       const label =
         document.createElement(
@@ -1641,12 +2603,18 @@ function renderShipping(){
           <input
             type="radio"
             name="shipping"
-            value="${escapeHtml(shipping.name)}"
-            data-price="${shipping.price}"
+            value="${escapeAttribute(
+              shipping.name
+            )}"
+            data-price="${Number(
+              shipping.price || 0
+            )}"
           >
 
           <span>
-            ${escapeHtml(shipping.name)}
+            ${escapeHtml(
+              shipping.name
+            )}
           </span>
 
         </div>
@@ -1655,8 +2623,13 @@ function renderShipping(){
         <strong>
 
           ${
-            shipping.price > 0
-              ? "NT$" + money(shipping.price)
+            Number(
+              shipping.price || 0
+            ) > 0
+              ? "NT$" +
+                money(
+                  shipping.price
+                )
               : "免費"
           }
 
@@ -1678,11 +2651,11 @@ function renderShipping(){
       'input[name="shipping"]'
     )
     .forEach(
-      input => {
+      input=>{
 
         input.addEventListener(
           "change",
-          () => {
+          ()=>{
 
             updateReceiverFields();
 
@@ -1704,6 +2677,8 @@ function renderShipping(){
     );
 
 }
+
+
 // =====================================================
 // Receiver fields
 // =====================================================
@@ -1732,64 +2707,58 @@ function updateReceiverFields(){
     );
 
 
-  // 還沒選運送方式
   if(!shipping){
 
-    receiverArea
-      .classList
-      .add("hidden");
+    receiverArea.classList.add(
+      "hidden"
+    );
+
 
     return;
 
   }
 
 
-  // 有選就顯示收件資料
-  receiverArea
-    .classList
-    .remove("hidden");
+  receiverArea.classList.remove(
+    "hidden"
+  );
 
 
-  // 先全部隱藏
-  receiver711
-    .classList
-    .add("hidden");
+  receiver711.classList.add(
+    "hidden"
+  );
 
-  receiverMail
-    .classList
-    .add("hidden");
 
-// 切換運送方式時，不相關欄位先保留內容
-// 目前不清除，避免客人誤觸後資料消失
-  // 7-11 店到店
+  receiverMail.classList.add(
+    "hidden"
+  );
+
+
   if(
     shipping.name ===
     "7-11 店到店"
   ){
 
-    receiver711
-      .classList
-      .remove("hidden");
+    receiver711.classList.remove(
+      "hidden"
+    );
 
   }
 
 
-  // 郵寄
   else if(
     shipping.name ===
     "郵寄"
   ){
 
-    receiverMail
-      .classList
-      .remove("hidden");
+    receiverMail.classList.remove(
+      "hidden"
+    );
 
   }
 
-
-  // 工作室自取
-  // 不需要另外顯示地址欄
 }
+
 
 // =====================================================
 // Selected shipping
@@ -1836,10 +2805,20 @@ function getAddonTotal(){
       addonCart
     )
     .reduce(
-      (sum,item)=>
+      (
+        sum,
+        item
+      )=>
         sum +
-        item.price *
-        item.qty,
+        (
+          Number(
+            item.price || 0
+          )
+          *
+          Number(
+            item.qty || 0
+          )
+        ),
       0
     );
 
@@ -1877,7 +2856,9 @@ function renderSummary(){
 
   const shippingFee =
     shipping
-      ? shipping.price
+      ? Number(
+          shipping.price || 0
+        )
       : 0;
 
 
@@ -1893,7 +2874,9 @@ function renderSummary(){
     )
     .textContent =
       "NT$" +
-      money(original);
+      money(
+        original
+      );
 
 
   document
@@ -1902,7 +2885,9 @@ function renderSummary(){
     )
     .textContent =
       "NT$" +
-      money(addonTotal);
+      money(
+        addonTotal
+      );
 
 
   document
@@ -1911,13 +2896,15 @@ function renderSummary(){
     )
     .textContent =
       shipping
-        ?
-        "NT$" +
-        money(
-          shipping.price
-        )
-        :
-        "尚未選擇";
+        ? (
+            shippingFee > 0
+              ? "NT$" +
+                money(
+                  shippingFee
+                )
+              : "免費"
+          )
+        : "尚未選擇";
 
 
   document
@@ -1926,7 +2913,9 @@ function renderSummary(){
     )
     .textContent =
       "NT$" +
-      money(total);
+      money(
+        total
+      );
 
 
   document
@@ -1938,6 +2927,8 @@ function renderSummary(){
     );
 
 }
+
+
 // =====================================================
 // Validate order
 // =====================================================
@@ -1948,7 +2939,8 @@ function validateOrder(){
 
     return {
       valid:false,
-      message:"找不到目前訂單。"
+      message:
+        "找不到目前訂單。"
     };
 
   }
@@ -1962,7 +2954,8 @@ function validateOrder(){
 
     return {
       valid:false,
-      message:"請選擇運送方式。"
+      message:
+        "請選擇運送方式。"
     };
 
   }
@@ -1970,14 +2963,18 @@ function validateOrder(){
 
   const recipientName =
     document
-      .getElementById("recipientName")
+      .getElementById(
+        "recipientName"
+      )
       .value
       .trim();
 
 
   const phone =
     document
-      .getElementById("recipientPhone")
+      .getElementById(
+        "recipientPhone"
+      )
       .value
       .trim();
 
@@ -1986,7 +2983,8 @@ function validateOrder(){
 
     return {
       valid:false,
-      message:"請填寫收件人姓名。"
+      message:
+        "請填寫收件人姓名。"
     };
 
   }
@@ -1996,19 +2994,23 @@ function validateOrder(){
 
     return {
       valid:false,
-      message:"請填寫手機號碼。"
+      message:
+        "請填寫手機號碼。"
     };
 
   }
 
 
   if(
-    !/^09\d{8}$/.test(phone)
+    !/^09\d{8}$/.test(
+      phone
+    )
   ){
 
     return {
       valid:false,
-      message:"請確認手機號碼是否正確。"
+      message:
+        "請確認手機號碼是否正確。"
     };
 
   }
@@ -2021,7 +3023,9 @@ function validateOrder(){
 
     const store =
       document
-        .getElementById("store711")
+        .getElementById(
+          "store711"
+        )
         .value
         .trim();
 
@@ -2030,7 +3034,8 @@ function validateOrder(){
 
       return {
         valid:false,
-        message:"請填寫 7-11 門市。"
+        message:
+          "請填寫 7-11 門市。"
       };
 
     }
@@ -2045,7 +3050,9 @@ function validateOrder(){
 
     const address =
       document
-        .getElementById("mailAddress")
+        .getElementById(
+          "mailAddress"
+        )
         .value
         .trim();
 
@@ -2054,7 +3061,8 @@ function validateOrder(){
 
       return {
         valid:false,
-        message:"請填寫郵寄地址。"
+        message:
+          "請填寫郵寄地址。"
       };
 
     }
@@ -2064,7 +3072,9 @@ function validateOrder(){
 
   const confirmed =
     document
-      .getElementById("confirmCheck")
+      .getElementById(
+        "confirmCheck"
+      )
       .checked;
 
 
@@ -2072,7 +3082,8 @@ function validateOrder(){
 
     return {
       valid:false,
-      message:"請勾選確認訂單內容。"
+      message:
+        "請勾選確認訂單內容。"
     };
 
   }
@@ -2083,6 +3094,8 @@ function validateOrder(){
   };
 
 }
+
+
 // =====================================================
 // Build submit payload
 // =====================================================
@@ -2095,7 +3108,16 @@ function buildOrderPayload(){
 
   return {
 
-    action:"confirm",
+    action:
+      "confirm",
+
+
+    campaignCode:
+      selectedCampaign
+        ? selectedCampaign
+            .campaignCode
+        : "",
+
 
     orderId:
       currentOrder
@@ -2105,14 +3127,22 @@ function buildOrderPayload(){
 
     addons:
       Object
-        .values(addonCart)
-        .map(item=>({
+        .values(
+          addonCart
+        )
+        .map(
+          item=>({
 
-          id:item.id,
+            id:
+              item.id,
 
-          qty:item.qty
+            qty:
+              Number(
+                item.qty || 0
+              )
 
-        })),
+          })
+        ),
 
 
     shippingMethod:
@@ -2121,55 +3151,71 @@ function buildOrderPayload(){
 
     recipientName:
       document
-        .getElementById("recipientName")
+        .getElementById(
+          "recipientName"
+        )
         .value
         .trim(),
 
 
     phone:
       document
-        .getElementById("recipientPhone")
+        .getElementById(
+          "recipientPhone"
+        )
         .value
         .trim(),
 
 
     postalCode:
       document
-        .getElementById("postalCode")
+        .getElementById(
+          "postalCode"
+        )
         .value
         .trim(),
 
 
     address:
       document
-        .getElementById("mailAddress")
+        .getElementById(
+          "mailAddress"
+        )
         .value
         .trim(),
 
 
     store711:
       document
-        .getElementById("store711")
+        .getElementById(
+          "store711"
+        )
         .value
         .trim(),
 
 
     paymentLast5:
       document
-        .getElementById("paymentLast5")
+        .getElementById(
+          "paymentLast5"
+        )
         .value
         .trim(),
 
 
     note:
       document
-        .getElementById("orderNote")
+        .getElementById(
+          "orderNote"
+        )
         .value
         .trim()
 
   };
 
 }
+
+
 // =====================================================
 // Submit order
 // =====================================================
@@ -2181,7 +3227,6 @@ document
   .addEventListener(
     "click",
     async()=>{
-
 
       const check =
         validateOrder();
@@ -2198,6 +3243,7 @@ document
         submitStatus.textContent =
           check.message;
 
+
         return;
 
       }
@@ -2209,7 +3255,9 @@ document
         );
 
 
-      button.disabled = true;
+      button.disabled =
+        true;
+
 
       button.textContent =
         "送出中...";
@@ -2225,16 +3273,13 @@ document
           buildOrderPayload();
 
 
-        const postUrl =
-          API.split("?")[0];
-
-
         const res =
           await fetch(
-            postUrl,
+            API_BASE,
             {
 
-              method:"POST",
+              method:
+                "POST",
 
               headers:{
                 "Content-Type":
@@ -2268,7 +3313,6 @@ document
           result
         );
 
-
       }
       catch(err){
 
@@ -2291,13 +3335,13 @@ document
 
     }
   );
+
+
 // =====================================================
 // Success
 // =====================================================
 
 function showSuccess(result){
-
-  // 隱藏原本操作區
 
   document
     .getElementById(
@@ -2308,16 +3352,15 @@ function showSuccess(result){
     );
 
 
-  document
-    .getElementById(
-      "orderArea"
-    )
-    .classList.add(
-      "hidden"
-    );
+  orderArea.classList.add(
+    "hidden"
+  );
 
 
-  // 顯示訂單編號
+  trackingArea.classList.add(
+    "hidden"
+  );
+
 
   document
     .getElementById(
@@ -2326,8 +3369,6 @@ function showSuccess(result){
     .textContent =
       result.orderId;
 
-
-  // 顯示應付金額
 
   document
     .getElementById(
@@ -2339,8 +3380,6 @@ function showSuccess(result){
         result.payableTotal
       );
 
-
-  // 顯示完成頁
 
   const area =
     document.getElementById(
@@ -2359,12 +3398,15 @@ function showSuccess(result){
   });
 
 }
+
+
 // =====================================================
 // Copy bank account
 // =====================================================
 
 const BANK_ACCOUNT =
   "82110000537372";
+
 
 const copyBankButton =
   document.getElementById(
@@ -2385,97 +3427,114 @@ if(copyBankButton){
           );
 
 
-        try{
-
-          await navigator
-            .clipboard
-            .writeText(
-              BANK_ACCOUNT
-            );
-
-
-          copyStatus.textContent =
-            "✓ 帳號已複製";
-
-
-          setTimeout(
-            ()=>{
-
-              copyStatus.textContent =
-                "";
-
-            },
-            2500
-          );
-
-
-        }
-        catch(err){
-
-          console.error(err);
-
-
-          copyStatus.textContent =
-            "請手動複製：82110000537372";
-
-        }
+        await copyTextWithStatus(
+          BANK_ACCOUNT,
+          copyStatus
+        );
 
       }
     );
 
 }
-document
-  .getElementById(
+
+
+const copyAccountButton =
+  document.getElementById(
     "copyAccountButton"
-  )
-  .addEventListener(
-    "click",
-    async()=>{
-
-      const copyStatus =
-        document.getElementById(
-          "copyStatus"
-        );
+  );
 
 
-      try{
+if(copyAccountButton){
 
-        await navigator
-          .clipboard
-          .writeText(
-            BANK_ACCOUNT
+  copyAccountButton
+    .addEventListener(
+      "click",
+      async()=>{
+
+        const copyStatus =
+          document.getElementById(
+            "copyStatus"
           );
 
 
-        copyStatus.textContent =
-          "✓ 帳號已複製";
-
-
-        setTimeout(
-          ()=>{
-
-            copyStatus.textContent =
-              "";
-
-          },
-          2500
+        await copyTextWithStatus(
+          BANK_ACCOUNT,
+          copyStatus
         );
 
       }
-      catch(err){
+    );
 
-        console.error(err);
+}
 
 
-        // 本機 file:// 測試時
-        // Clipboard API 有時會被瀏覽器擋住
-        copyStatus.textContent =
-          "請長按帳號複製：82110000537372";
+// =====================================================
+// Copy helper
+// =====================================================
 
-      }
+async function copyTextWithStatus(
+  text,
+  statusElement
+){
+
+  try{
+
+    await navigator
+      .clipboard
+      .writeText(
+        text
+      );
+
+
+    if(statusElement){
+
+      statusElement.textContent =
+        "✓ 帳號已複製";
+
+
+      setTimeout(
+        ()=>{
+
+          statusElement.textContent =
+            "";
+
+        },
+        2500
+      );
 
     }
-  );
+
+  }
+  catch(err){
+
+    console.error(err);
+
+
+    if(statusElement){
+
+      statusElement.textContent =
+        `請手動複製：${text}`;
+
+    }
+
+  }
+
+}
+
+
+// =====================================================
+// Customer change
+// =====================================================
+
+select.addEventListener(
+  "change",
+  ()=>{
+
+    hideCurrentOrder();
+
+  }
+);
+
 
 // =====================================================
 // Helpers
@@ -2492,6 +3551,10 @@ function money(value){
 
 }
 
+
+// =====================================================
+// Escape HTML
+// =====================================================
 
 function escapeHtml(text){
 
@@ -2510,29 +3573,157 @@ function escapeHtml(text){
   return div.innerHTML;
 
 }
+
+
+// =====================================================
+// Escape attribute
+// =====================================================
+
+function escapeAttribute(text){
+
+  return escapeHtml(
+    text
+  )
+  .replace(
+    /"/g,
+    "&quot;"
+  );
+
+}
+
+
+// =====================================================
+// Campaign date helpers
+// =====================================================
+
+function formatCampaignRange(
+  startDate,
+  endDate
+){
+
+  const start =
+    formatCampaignDate(
+      startDate
+    );
+
+
+  const end =
+    formatCampaignDate(
+      endDate
+    );
+
+
+  if(
+    start &&
+    end
+  ){
+
+    return `${start}－${end}`;
+
+  }
+
+
+  return start ||
+    end ||
+    "";
+
+}
+
+
+function formatCampaignDate(value){
+
+  if(!value){
+
+    return "";
+
+  }
+
+
+  const parts =
+    String(
+      value
+    )
+    .split(
+      "-"
+    );
+
+
+  if(
+    parts.length === 3
+  ){
+
+    return `${parts[1]}/${parts[2]}`;
+
+  }
+
+
+  return String(
+    value
+  );
+
+}
+
+
+// =====================================================
+// Date / time
+// =====================================================
+
 function formatDateTime(value){
 
   if(!value){
+
     return "";
+
   }
 
+
   const date =
-    new Date(value);
+    new Date(
+      value
+    );
+
+
+  if(
+    Number.isNaN(
+      date.getTime()
+    )
+  ){
+
+    return String(
+      value
+    );
+
+  }
+
 
   return date.toLocaleString(
     "zh-TW",
     {
-      year:"numeric",
-      month:"2-digit",
-      day:"2-digit",
-      hour:"2-digit",
-      minute:"2-digit",
-      hour12:false,
-      timeZone:"Asia/Taipei"
+      year:
+        "numeric",
+
+      month:
+        "2-digit",
+
+      day:
+        "2-digit",
+
+      hour:
+        "2-digit",
+
+      minute:
+        "2-digit",
+
+      hour12:
+        false,
+
+      timeZone:
+        "Asia/Taipei"
     }
   );
 
 }
+
 
 // =====================================================
 // Start
