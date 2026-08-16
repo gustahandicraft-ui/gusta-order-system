@@ -606,58 +606,76 @@ async function handleCampaignChange(
 // Campaign info
 // =====================================================
 
-function renderCampaignInfo() {
+function renderCampaignInfo(
+  campaign
+){
 
-  if (!campaignInfo) {
-    return;
-  }
-
-  if (!selectedCampaignCode) {
-    campaignInfo.classList.add("hidden");
-    campaignInfo.innerHTML = "";
-    return;
-  }
-
-  const campaign =
-    campaigns.find(
-      item =>
-        String(item.campaignCode) ===
-        String(selectedCampaignCode)
+  const campaignInfo =
+    document.getElementById(
+      "campaignInfo"
     );
 
-  if (!campaign) {
-    campaignInfo.classList.add("hidden");
-    campaignInfo.innerHTML = "";
+
+  if(!campaignInfo){
+
     return;
+
+  }
+
+
+  const currentCampaign =
+    campaign ||
+    selectedCampaign;
+
+
+  if(!currentCampaign){
+
+    campaignInfo.innerHTML =
+      "";
+
+
+    campaignInfo.classList.add(
+      "hidden"
+    );
+
+
+    return;
+
   }
 
 
   const startDate =
     formatCampaignDate(
-      campaign.startDate
+      currentCampaign.startDate
     );
+
 
   const endDate =
     formatCampaignDate(
-      campaign.endDate
+      currentCampaign.endDate
     );
 
 
-  let dateText = "";
+  let dateText =
+    "";
 
-  if (startDate && endDate) {
+
+  if(
+    startDate &&
+    endDate
+  ){
 
     dateText =
       `${startDate}－${endDate}`;
 
   }
-  else if (startDate) {
+  else if(startDate){
 
     dateText =
       `${startDate} 起`;
 
   }
-  else if (endDate) {
+  else if(endDate){
 
     dateText =
       `至 ${endDate}`;
@@ -665,50 +683,45 @@ function renderCampaignInfo() {
   }
 
 
-  if (!dateText) {
+  // 沒有日期就不顯示額外資訊
+  if(!dateText){
 
-    campaignInfo.classList.add("hidden");
-    campaignInfo.innerHTML = "";
+    campaignInfo.innerHTML =
+      "";
+
+
+    campaignInfo.classList.add(
+      "hidden"
+    );
+
+
     return;
 
   }
 
 
   campaignInfo.innerHTML = `
+
     <div class="campaign-period">
+
       <span class="campaign-period-label">
         團購期間
       </span>
 
       <span class="campaign-period-date">
-        ${escapeHtml(dateText)}
+        ${escapeHtml(
+          dateText
+        )}
       </span>
+
     </div>
+
   `;
 
-  campaignInfo.classList.remove("hidden");
 
-}
-
-
-function formatCampaignDate(value) {
-
-  if (!value) {
-    return "";
-  }
-
-  const date =
-    new Date(value);
-
-  if (
-    Number.isNaN(
-      date.getTime()
-    )
-  ) {
-    return "";
-  }
-
-  return `${date.getMonth() + 1}/${date.getDate()}`;
+  campaignInfo.classList.remove(
+    "hidden"
+  );
 
 }
 
@@ -3762,7 +3775,9 @@ function formatCampaignRange(
 }
 
 
-function formatCampaignDate(value){
+function formatCampaignDate(
+  value
+){
 
   if(!value){
 
@@ -3771,27 +3786,47 @@ function formatCampaignDate(value){
   }
 
 
-  const parts =
-    String(
-      value
-    )
-    .split(
-      "-"
+  // 如果是 yyyy-MM-dd
+  const simpleMatch =
+    String(value).match(
+      /^(\d{4})-(\d{2})-(\d{2})$/
     );
 
 
-  if(
-    parts.length === 3
-  ){
+  if(simpleMatch){
 
-    return `${parts[1]}/${parts[2]}`;
+    return `${
+      Number(simpleMatch[2])
+    }/${
+      Number(simpleMatch[3])
+    }`;
 
   }
 
 
-  return String(
-    value
-  );
+  // 如果 API 傳回完整日期字串
+  const date =
+    new Date(
+      value
+    );
+
+
+  if(
+    Number.isNaN(
+      date.getTime()
+    )
+  ){
+
+    return "";
+
+  }
+
+
+  return `${
+    date.getMonth() + 1
+  }/${
+    date.getDate()
+  }`;
 
 }
 
