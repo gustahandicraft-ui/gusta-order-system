@@ -210,10 +210,7 @@ async function init(){
         : [];
 
 
-    groupedAddons =
-      groupAddonProducts(
-        data.addons || []
-      );
+    groupedAddons = {};
 
 
     console.log(
@@ -411,12 +408,14 @@ function renderCampaignSelector(){
     }
 
 
-    loadCampaignCustomers(
-      campaign.campaignCode
-    );
+campaignSelect.dispatchEvent(
+  new Event(
+    "change"
+  )
+);
 
 
-    return;
+return;
 
   }
 
@@ -567,6 +566,14 @@ async function handleCampaignChange(
       null;
 
 
+    groupedAddons =
+      {};
+
+
+    addonCart =
+      {};
+
+
     resetCustomerSelector();
 
 
@@ -592,35 +599,75 @@ async function handleCampaignChange(
     ) || null;
 
 
-  renderCampaignInfo(
-    selectedCampaign
-  );
-
-
   try{
 
-    localStorage.setItem(
-      "gustaLastCampaign",
+    const campaignAddons =
+      await getCampaignAddons(
+        campaignCode
+      );
+
+
+    groupedAddons =
+      groupAddonProducts(
+        campaignAddons
+      );
+
+
+    addonCart =
+      {};
+
+
+    renderCampaignInfo(
+      selectedCampaign
+    );
+
+
+    try{
+
+      localStorage.setItem(
+        "gustaLastCampaign",
+        campaignCode
+      );
+
+    }
+    catch(err){
+
+      console.warn(
+        "無法儲存團購活動",
+        err
+      );
+
+    }
+
+
+    await loadCampaignCustomers(
       campaignCode
     );
 
   }
   catch(err){
 
-    console.warn(
-      "無法儲存團購活動",
-      err
-    );
+    console.error(err);
+
+
+    groupedAddons =
+      {};
+
+
+    addonCart =
+      {};
+
+
+    status.textContent =
+      err.message ||
+      "目前無法載入這個團購資料。";
+
+
+    resetCustomerSelector();
 
   }
 
-
-  await loadCampaignCustomers(
-    campaignCode
-  );
-
 }
-
 
 function renderCampaignInfo(){
 
@@ -1710,7 +1757,63 @@ function renderTrackingStep(
   `;
 
 }
+// =====================================================
+// Load addons for selected campaign
+// =====================================================
 
+async function getCampaignAddons(
+  campaignCode
+){
+
+  if(!campaignCode){
+    return [];
+  }
+
+
+  const url =
+    `${API_BASE}?action=addons`
+    +
+    `&campaignCode=${encodeURIComponent(
+      campaignCode
+    )}`;
+
+
+  const res =
+    await fetch(
+      url
+    );
+
+
+  if(!res.ok){
+
+    throw new Error(
+      "無法讀取加購商品"
+    );
+
+  }
+
+
+  const data =
+    await res.json();
+
+
+  if(!data.success){
+
+    throw new Error(
+      data.message ||
+      "加購商品讀取失敗"
+    );
+
+  }
+
+
+  return Array.isArray(
+    data.addons
+  )
+    ? data.addons
+    : [];
+
+}
 
 // =====================================================
 // Group addon products
@@ -1718,8 +1821,7 @@ function renderTrackingStep(
 
 function groupAddonProducts(addons){
 
-  const groups =
-    {};
+  const groups = {};
 
 
   addons.forEach(
@@ -1737,9 +1839,15 @@ function groupAddonProducts(addons){
         ).trim();
 
 
-      // ===============================================
+      const perOrderLimit =
+        Number(
+          item.perOrderLimit
+        ) || 0;
+
+
+      // =================================================
       // Elastic Shaft
-      // ===============================================
+      // =================================================
 
       if(
         name.includes(
@@ -1799,22 +1907,23 @@ function groupAddonProducts(addons){
         }
 
 
-        groups
-          .elastic
-          .options
-          .push({
+        groups.elastic.options.push({
 
-            id:
-              item.id,
+          id:
+            item.id,
 
+          label:
             label,
 
-            price:
-              Number(
-                item.price
-              ) || 0
+          price:
+            Number(
+              item.price
+            ) || 0,
 
-          });
+          perOrderLimit:
+            perOrderLimit
+
+        });
 
 
         return;
@@ -1822,9 +1931,9 @@ function groupAddonProducts(addons){
       }
 
 
-      // ===============================================
+      // =================================================
       // Keyring
-      // ===============================================
+      // =================================================
 
       if(
         name.includes(
@@ -1848,23 +1957,23 @@ function groupAddonProducts(addons){
         }
 
 
-        groups
-          .keyring
-          .colors
-          .push({
+        groups.keyring.colors.push({
 
-            id:
-              item.id,
+          id:
+            item.id,
 
-            color:
-              spec,
+          color:
+            spec,
 
-            price:
-              Number(
-                item.price
-              ) || 0
+          price:
+            Number(
+              item.price
+            ) || 0,
 
-          });
+          perOrderLimit:
+            perOrderLimit
+
+        });
 
 
         return;
@@ -1872,9 +1981,9 @@ function groupAddonProducts(addons){
       }
 
 
-      // ===============================================
+      // =================================================
       // Clicker
-      // ===============================================
+      // =================================================
 
       if(
         name.includes(
@@ -1925,42 +2034,32 @@ function groupAddonProducts(addons){
 
 
         if(
-          !groups
-            .clicker
-            .modes[
-              mode
-            ]
+          !groups.clicker.modes[mode]
         ){
 
-          groups
-            .clicker
-            .modes[
-              mode
-            ] =
+          groups.clicker.modes[mode] =
             [];
 
         }
 
 
-        groups
-          .clicker
-          .modes[
-            mode
-          ]
-          .push({
+        groups.clicker.modes[mode].push({
 
-            id:
-              item.id,
+          id:
+            item.id,
 
-            color:
-              spec,
+          color:
+            spec,
 
-            price:
-              Number(
-                item.price
-              ) || 0
+          price:
+            Number(
+              item.price
+            ) || 0,
 
-          });
+          perOrderLimit:
+            perOrderLimit
+
+        });
 
 
         return;
@@ -1968,10 +2067,9 @@ function groupAddonProducts(addons){
       }
 
 
-      // ===============================================
+      // =================================================
       // 其他加購
-      // 未來其他團購使用
-      // ===============================================
+      // =================================================
 
       if(
         !groups.other
@@ -1997,7 +2095,10 @@ function groupAddonProducts(addons){
         price:
           Number(
             item.price
-          ) || 0
+          ) || 0,
+
+        perOrderLimit:
+          perOrderLimit
 
       });
 
@@ -2026,6 +2127,10 @@ function renderAllAddons(){
     "";
 
 
+  // =====================================================
+  // Elastic
+  // =====================================================
+
   if(
     groupedAddons.elastic
   ){
@@ -2034,27 +2139,25 @@ function renderAllAddons(){
 
       createAddonSelector(
 
-        groupedAddons
-          .elastic
-          .title,
+        groupedAddons.elastic.title,
 
-        groupedAddons
-          .elastic
-          .options
-          .map(
-            item=>({
+        groupedAddons.elastic.options.map(
+          item=>({
 
-              id:
-                item.id,
+            id:
+              item.id,
 
-              label:
-                item.label,
+            label:
+              item.label,
 
-              price:
-                item.price
+            price:
+              item.price,
 
-            })
-          )
+            perOrderLimit:
+              item.perOrderLimit
+
+          })
+        )
 
       )
 
@@ -2062,6 +2165,10 @@ function renderAllAddons(){
 
   }
 
+
+  // =====================================================
+  // Keyring
+  // =====================================================
 
   if(
     groupedAddons.keyring
@@ -2071,27 +2178,25 @@ function renderAllAddons(){
 
       createAddonSelector(
 
-        groupedAddons
-          .keyring
-          .title,
+        groupedAddons.keyring.title,
 
-        groupedAddons
-          .keyring
-          .colors
-          .map(
-            item=>({
+        groupedAddons.keyring.colors.map(
+          item=>({
 
-              id:
-                item.id,
+            id:
+              item.id,
 
-              label:
-                item.color,
+            label:
+              item.color,
 
-              price:
-                item.price
+            price:
+              item.price,
 
-            })
-          )
+            perOrderLimit:
+              item.perOrderLimit
+
+          })
+        )
 
       )
 
@@ -2100,21 +2205,20 @@ function renderAllAddons(){
   }
 
 
+  // =====================================================
+  // Clicker
+  // =====================================================
+
   if(
     groupedAddons.clicker
   ){
 
     Object
       .entries(
-        groupedAddons
-          .clicker
-          .modes
+        groupedAddons.clicker.modes
       )
       .forEach(
-        ([
-          mode,
-          colors
-        ])=>{
+        ([mode,colors])=>{
 
           root.appendChild(
 
@@ -2132,7 +2236,10 @@ function renderAllAddons(){
                     item.color,
 
                   price:
-                    item.price
+                    item.price,
+
+                  perOrderLimit:
+                    item.perOrderLimit
 
                 })
               )
@@ -2147,42 +2254,49 @@ function renderAllAddons(){
   }
 
 
+  // =====================================================
+  // Other
+  // =====================================================
+
   if(
     Array.isArray(
       groupedAddons.other
     )
   ){
 
-    groupedAddons
-      .other
-      .forEach(
-        item=>{
+    groupedAddons.other.forEach(
+      item=>{
 
-          root.appendChild(
+        root.appendChild(
 
-            createAddonSelector(
+          createAddonSelector(
 
-              item.title,
+            item.title,
 
-              [
-                {
-                  id:
-                    item.id,
+            [
+              {
 
-                  label:
-                    item.label,
+                id:
+                  item.id,
 
-                  price:
-                    item.price
-                }
-              ]
+                label:
+                  item.label,
 
-            )
+                price:
+                  item.price,
 
-          );
+                perOrderLimit:
+                  item.perOrderLimit
 
-        }
-      );
+              }
+            ]
+
+          )
+
+        );
+
+      }
+    );
 
   }
 
@@ -2256,11 +2370,14 @@ function createAddonSelector(
                 item.id
               )}"
               data-price="${Number(
-                item.price || 0
-              )}"
-              data-label="${escapeAttribute(
-                item.label
-              )}"
+  item.price || 0
+)}"
+data-label="${escapeAttribute(
+  item.label
+)}"
+data-limit="${Number(
+  item.perOrderLimit || 0
+)}"
             >
 
               ${escapeHtml(
@@ -2388,25 +2505,59 @@ function createAddonSelector(
           ];
 
 
-        addAddonToCart({
+       const itemId =
+  selected.value;
 
-          id:
-            selected.value,
 
-          name:
-            title,
+const perOrderLimit =
+  Number(
+    selected.dataset.limit
+  ) || 0;
 
-          spec:
-            selected.dataset.label,
 
-          price:
-            Number(
-              selected.dataset.price
-            ) || 0,
+const currentQty =
+  addonCart[itemId]
+    ? Number(
+        addonCart[itemId].qty
+      ) || 0
+    : 0;
 
-          qty
 
-        });
+if(
+  perOrderLimit > 0 &&
+  currentQty + qty > perOrderLimit
+){
+
+  alert(
+    `此商品每人最多加購 ${perOrderLimit} 個。`
+  );
+
+  return;
+
+}
+
+
+addAddonToCart({
+
+  id:
+    itemId,
+
+  name:
+    title,
+
+  spec:
+    selected.dataset.label,
+
+  price:
+    Number(
+      selected.dataset.price
+    ) || 0,
+
+  qty,
+
+  perOrderLimit
+
+});
 
 
         qty =
