@@ -13,6 +13,7 @@ const API_BASE =
 const select =
   document.getElementById(
     "customerSelect"
+     );
 
 const status =
   document.getElementById(
