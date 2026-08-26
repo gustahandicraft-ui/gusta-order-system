@@ -1050,11 +1050,20 @@ loadOrderButton
 
         if(!res.ok){
 
-          throw new Error(
-            "讀取訂單失敗"
-          );
+  console.error(
+    "訂單 API 失敗：",
+    {
+      status: res.status,
+      statusText: res.statusText,
+      url: res.url
+    }
+  );
 
-        }
+  throw new Error(
+    `讀取訂單失敗 (${res.status})`
+  );
+
+}
 
 
         const data =
