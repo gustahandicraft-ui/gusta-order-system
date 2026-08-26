@@ -13,7 +13,6 @@ const API_BASE =
 const select =
   document.getElementById(
     "customerSelect"
-  );
 
 const status =
   document.getElementById(
@@ -544,43 +543,37 @@ async function handleCampaignChange(
         )
     ) || null;
 
-try{
 
-  // 客戶名單與加購商品同時讀取
-  const [
-    campaignAddons
-  ] = await Promise.all([
+  try{
 
-    getCampaignAddons(
-      campaignCode
-    ),
-
-    loadCampaignCustomers(
-      campaignCode
-    )
-
-  ]);
-
-
-  groupedAddons =
-    groupAddonProducts(
+    // 加購商品與訂單名單同時讀取
+    const [
       campaignAddons
-    );
+    ] = await Promise.all([
+
+      getCampaignAddons(
+        campaignCode
+      ),
+
+      loadCampaignCustomers(
+        campaignCode
+      )
+
+    ]);
 
 
-  addonCart =
-    {};
+    groupedAddons =
+      groupAddonProducts(
+        campaignAddons
+      );
 
 
-  renderCampaignInfo(
-    selectedCampaign
-  );
-
-}
+    addonCart =
+      {};
 
 
-    await loadCampaignCustomers(
-      campaignCode
+    renderCampaignInfo(
+      selectedCampaign
     );
 
   }
