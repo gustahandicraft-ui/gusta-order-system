@@ -478,70 +478,16 @@ return;
 
 
   // =====================================================
-  // 恢復上次選擇
-  // =====================================================
+// 預設不選擇任何團購活動
+// =====================================================
 
-  let lastCampaign =
-    "";
+campaignSelect.value = "";
 
+selectedCampaign = null;
 
-  try{
+resetCustomerSelector();
 
-    lastCampaign =
-      localStorage.getItem(
-        "gustaLastCampaign"
-      ) || "";
-
-  }
-  catch(err){
-
-    console.warn(
-      "無法讀取上次團購活動",
-      err
-    );
-
-  }
-
-
-  if(
-    lastCampaign
-    &&
-    campaigns.some(
-      campaign =>
-        String(
-          campaign.campaignCode
-        ) ===
-        String(
-          lastCampaign
-        )
-    )
-  ){
-
-    campaignSelect.value =
-      lastCampaign;
-
-
-    campaignSelect.dispatchEvent(
-      new Event(
-        "change"
-      )
-    );
-
-  }
-  else{
-
-    selectedCampaign =
-      null;
-
-
-    resetCustomerSelector();
-
-
-    renderCampaignInfo(
-      null
-    );
-
-  }
+renderCampaignInfo(null);
 
 }
 
@@ -598,46 +544,39 @@ async function handleCampaignChange(
         )
     ) || null;
 
+try{
 
-  try{
+  // 客戶名單與加購商品同時讀取
+  const [
+    campaignAddons
+  ] = await Promise.all([
 
-    const campaignAddons =
-      await getCampaignAddons(
-        campaignCode
-      );
+    getCampaignAddons(
+      campaignCode
+    ),
 
+    loadCampaignCustomers(
+      campaignCode
+    )
 
-    groupedAddons =
-      groupAddonProducts(
-        campaignAddons
-      );
-
-
-    addonCart =
-      {};
+  ]);
 
 
-    renderCampaignInfo(
-      selectedCampaign
+  groupedAddons =
+    groupAddonProducts(
+      campaignAddons
     );
 
 
-    try{
+  addonCart =
+    {};
 
-      localStorage.setItem(
-        "gustaLastCampaign",
-        campaignCode
-      );
 
-    }
-    catch(err){
+  renderCampaignInfo(
+    selectedCampaign
+  );
 
-      console.warn(
-        "無法儲存團購活動",
-        err
-      );
-
-    }
+}
 
 
     await loadCampaignCustomers(
