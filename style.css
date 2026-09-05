@@ -627,7 +627,7 @@ select:focus{
   box-shadow:
     0 0 0 3px
     rgba(239,212,103,.18);
-}
+
   border-color:#d7b83e;
 
   box-shadow:
@@ -1272,4 +1272,261 @@ textarea{
 #searchCard label[for="customerSelect"]{
   display:block;
   margin-bottom:12px;
+}
+/* =====================================================
+   Tracking Order Detail
+===================================================== */
+
+
+/* 團購名稱 */
+
+.tracking-campaign-name{
+  margin-bottom:16px;
+
+  color:#9b9187;
+
+  font-size:13px;
+  font-weight:600;
+}
+
+
+/* 明細區塊 */
+
+.tracking-detail-section{
+  margin-top:24px;
+  padding-top:20px;
+
+  border-top:1px solid #eee9e2;
+}
+
+
+.tracking-detail-title{
+  margin-bottom:12px;
+
+  color:#50483f;
+
+  font-size:16px;
+  font-weight:800;
+}
+
+
+/* 商品列表 */
+
+.tracking-products{
+  width:100%;
+}
+
+
+.tracking-product-row{
+  display:flex;
+
+  justify-content:space-between;
+  align-items:flex-start;
+
+  gap:18px;
+
+  padding:12px 0;
+
+  border-bottom:1px solid #f0ebe4;
+}
+
+
+.tracking-product-row:last-child{
+  border-bottom:0;
+}
+
+
+.tracking-product-main{
+  min-width:0;
+  flex:1;
+}
+
+
+.tracking-product-main strong{
+  display:block;
+
+  color:#50483f;
+
+  font-size:14px;
+  line-height:1.5;
+
+  overflow-wrap:anywhere;
+}
+
+
+.tracking-product-spec{
+  margin-top:3px;
+
+  color:#958b80;
+
+  font-size:12px;
+  line-height:1.5;
+}
+
+
+.tracking-product-right{
+  flex:0 0 auto;
+
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+
+  gap:3px;
+
+  white-space:nowrap;
+}
+
+
+.tracking-product-right span{
+  color:#958b80;
+
+  font-size:12px;
+}
+
+
+.tracking-product-right strong{
+  color:#55482a;
+
+  font-size:14px;
+}
+
+
+.tracking-empty{
+  padding:12px 0;
+
+  color:#9b9187;
+
+  font-size:13px;
+}
+
+
+/* 收件／配送資訊 */
+
+.tracking-detail-section .tracking-detail{
+  margin-top:0;
+  padding-top:0;
+
+  border-top:0;
+}
+
+
+.tracking-detail-section .tracking-row{
+  padding:10px 0;
+}
+
+
+.tracking-detail-section .tracking-row + .tracking-row{
+  border-top:1px solid #f3eee7;
+}
+
+
+/* 金額總計 */
+
+.tracking-order-summary{
+  margin-top:24px;
+
+  padding:18px;
+
+  border-radius:14px;
+
+  background:#faf8f4;
+}
+
+
+.tracking-order-summary > div{
+  display:flex;
+
+  justify-content:space-between;
+  align-items:center;
+
+  gap:20px;
+
+  padding:6px 0;
+}
+
+
+.tracking-order-summary span{
+  color:#8e8379;
+
+  font-size:13px;
+}
+
+
+.tracking-order-summary strong{
+  color:#50483f;
+
+  font-size:14px;
+
+  white-space:nowrap;
+}
+
+
+.tracking-order-summary
+.tracking-summary-total{
+  margin-top:8px;
+  padding-top:13px;
+
+  border-top:1px solid #ddd5ca;
+}
+
+
+.tracking-order-summary
+.tracking-summary-total span{
+  color:#55482a;
+
+  font-weight:800;
+}
+
+
+.tracking-order-summary
+.tracking-summary-total strong{
+  color:#55482a;
+
+  font-size:20px;
+  font-weight:800;
+}
+
+
+/* =====================================================
+   Tracking Detail Mobile
+===================================================== */
+
+@media(max-width:480px){
+
+  .tracking-product-row{
+    gap:12px;
+  }
+
+
+  .tracking-product-main strong{
+    font-size:13px;
+  }
+
+
+  .tracking-product-right strong{
+    font-size:13px;
+  }
+
+
+  .tracking-order-head{
+    align-items:flex-start;
+  }
+
+
+  .tracking-row{
+    align-items:flex-start;
+  }
+
+
+  .tracking-row strong{
+    max-width:65%;
+
+    overflow-wrap:anywhere;
+  }
+
+
+  .tracking-order-summary{
+    padding:16px;
+  }
+
 }
