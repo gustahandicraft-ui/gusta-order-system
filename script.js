@@ -1405,13 +1405,25 @@ function renderOrder(data){
 
 
 // =====================================================
-// Render tracking status
+// Render tracking status + order detail
 // =====================================================
 
 function renderTrackingStatus(data){
 
   const master =
-    data.master;
+    data.master || {};
+
+
+  const items =
+    Array.isArray(data.items)
+      ? data.items
+      : [];
+
+
+  const addons =
+    Array.isArray(data.addons)
+      ? data.addons
+      : [];
 
 
   const confirmDone =
@@ -1456,6 +1468,291 @@ function renderTrackingStatus(data){
   const shippedAt =
     master.shippedAt || "";
 
+
+  // =====================================================
+  // 原始商品
+  // =====================================================
+
+  const orderItemHtml =
+    items.length
+      ? items
+          .map(
+            item=>`
+
+              <div class="tracking-product-row">
+
+                <div class="tracking-product-main">
+
+                  <strong>
+                    ${escapeHtml(
+                      item.product || ""
+                    )}
+                  </strong>
+
+                  ${
+                    item.spec
+                      ? `
+                        <div class="tracking-product-spec">
+                          ${escapeHtml(
+                            item.spec
+                          )}
+                        </div>
+                      `
+                      : ""
+                  }
+
+                </div>
+
+
+                <div class="tracking-product-right">
+
+                  <span>
+                    × ${Number(
+                      item.qty || 0
+                    )}
+                  </span>
+
+                  ${
+                    item.subtotal != null
+                      ? `
+                        <strong>
+                          NT$${money(
+                            item.subtotal
+                          )}
+                        </strong>
+                      `
+                      : ""
+                  }
+
+                </div>
+
+              </div>
+
+            `
+          )
+          .join("")
+      : `
+
+          <div class="tracking-empty">
+            目前沒有商品明細
+          </div>
+
+        `;
+
+
+  // =====================================================
+  // 加購商品
+  // =====================================================
+
+  const addonHtml =
+    addons.length
+      ? `
+
+          <div class="tracking-detail-section">
+
+            <div class="tracking-detail-title">
+              加購商品
+            </div>
+
+
+            <div class="tracking-products">
+
+              ${addons
+                .map(
+                  item=>`
+
+                    <div class="tracking-product-row">
+
+                      <div class="tracking-product-main">
+
+                        <strong>
+                          ${escapeHtml(
+                            item.label ||
+                            item.name ||
+                            ""
+                          )}
+                        </strong>
+
+                        ${
+                          item.spec
+                            ? `
+                              <div class="tracking-product-spec">
+                                ${escapeHtml(
+                                  item.spec
+                                )}
+                              </div>
+                            `
+                            : ""
+                        }
+
+                      </div>
+
+
+                      <div class="tracking-product-right">
+
+                        <span>
+                          × ${Number(
+                            item.qty || 0
+                          )}
+                        </span>
+
+                        ${
+                          item.subtotal != null
+                            ? `
+                              <strong>
+                                NT$${money(
+                                  item.subtotal
+                                )}
+                              </strong>
+                            `
+                            : ""
+                        }
+
+                      </div>
+
+                    </div>
+
+                  `
+                )
+                .join("")}
+
+            </div>
+
+          </div>
+
+        `
+      : "";
+
+
+  // =====================================================
+  // 收件資料
+  // =====================================================
+
+  const receiverHtml =
+    confirmDone
+      ? `
+
+          <div class="tracking-detail-section">
+
+            <div class="tracking-detail-title">
+              收件資訊
+            </div>
+
+
+            <div class="tracking-detail">
+
+              <div class="tracking-row">
+
+                <span>
+                  收件人
+                </span>
+
+                <strong>
+                  ${escapeHtml(
+                    master.recipientName ||
+                    "—"
+                  )}
+                </strong>
+
+              </div>
+
+
+              <div class="tracking-row">
+
+                <span>
+                  手機
+                </span>
+
+                <strong>
+                  ${escapeHtml(
+                    String(
+                      master.phone || "—"
+                    )
+                  )}
+                </strong>
+
+              </div>
+
+
+              ${
+                master.store711
+                  ? `
+
+                      <div class="tracking-row">
+
+                        <span>
+                          7-11 門市
+                        </span>
+
+                        <strong>
+                          ${escapeHtml(
+                            master.store711
+                          )}
+                        </strong>
+
+                      </div>
+
+                    `
+                  : ""
+              }
+
+
+              ${
+                master.address
+                  ? `
+
+                      <div class="tracking-row">
+
+                        <span>
+                          郵寄地址
+                        </span>
+
+                        <strong>
+                          ${escapeHtml(
+                            [
+                              master.postalCode,
+                              master.address
+                            ]
+                            .filter(Boolean)
+                            .join(" ")
+                          )}
+                        </strong>
+
+                      </div>
+
+                    `
+                  : ""
+              }
+
+
+              <div class="tracking-row">
+
+                <span>
+                  匯款末五碼
+                </span>
+
+                <strong>
+                  ${escapeHtml(
+                    String(
+                      master.paymentLast5 ||
+                      "—"
+                    )
+                  )}
+                </strong>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        `
+      : "";
+
+
+  // =====================================================
+  // 畫面
+  // =====================================================
 
   trackingContent.innerHTML = `
 
@@ -1516,7 +1813,7 @@ function renderTrackingStatus(data){
 
         <strong>
           ${escapeHtml(
-            master.orderId
+            master.orderId || ""
           )}
         </strong>
 
@@ -1563,84 +1860,165 @@ function renderTrackingStatus(data){
     </div>
 
 
-    <div class="tracking-detail">
+    <div class="tracking-detail-section">
 
-      <div class="tracking-row">
+      <div class="tracking-detail-title">
+        訂單明細
+      </div>
+
+
+      <div class="tracking-products">
+        ${orderItemHtml}
+      </div>
+
+    </div>
+
+
+    ${addonHtml}
+
+
+    <div class="tracking-detail-section">
+
+      <div class="tracking-detail-title">
+        配送資訊
+      </div>
+
+
+      <div class="tracking-detail">
+
+        <div class="tracking-row">
+
+          <span>
+            運送方式
+          </span>
+
+          <strong>
+            ${escapeHtml(
+              master.shippingMethod ||
+              "尚未選擇"
+            )}
+          </strong>
+
+        </div>
+
+
+        <div class="tracking-row">
+
+          <span>
+            物流單號
+          </span>
+
+          ${
+            trackingNumber
+              ? `
+                  <strong>
+                    ${escapeHtml(
+                      trackingNumber
+                    )}
+                  </strong>
+                `
+              : `
+                  <strong class="muted">
+                    尚未建立
+                  </strong>
+                `
+          }
+
+        </div>
+
+
+        ${
+          shippedAt
+            ? `
+
+                <div class="tracking-row">
+
+                  <span>
+                    出貨時間
+                  </span>
+
+                  <strong>
+                    ${escapeHtml(
+                      formatDateTime(
+                        shippedAt
+                      )
+                    )}
+                  </strong>
+
+                </div>
+
+              `
+            : ""
+        }
+
+      </div>
+
+    </div>
+
+
+    ${receiverHtml}
+
+
+    <div class="tracking-order-summary">
+
+      <div>
 
         <span>
-          運送方式
+          原始訂單
         </span>
 
         <strong>
-          ${escapeHtml(
-            master.shippingMethod ||
-            "尚未選擇"
+          NT$${money(
+            master.originalTotal
           )}
         </strong>
 
       </div>
 
 
-      ${
-        trackingNumber
-          ? `
+      <div>
 
-            <div class="tracking-row">
+        <span>
+          加購商品
+        </span>
 
-              <span>
-                物流單號
-              </span>
+        <strong>
+          NT$${money(
+            master.addonTotal
+          )}
+        </strong>
 
-              <strong>
-                ${escapeHtml(
-                  trackingNumber
-                )}
-              </strong>
-
-            </div>
-
-          `
-          : `
-
-            <div class="tracking-row">
-
-              <span>
-                物流單號
-              </span>
-
-              <strong class="muted">
-                尚未建立
-              </strong>
-
-            </div>
-
-          `
-      }
+      </div>
 
 
-      ${
-        shippedAt
-          ? `
+      <div>
 
-            <div class="tracking-row">
+        <span>
+          運費
+        </span>
 
-              <span>
-                出貨時間
-              </span>
+        <strong>
+          NT$${money(
+            master.shippingFee
+          )}
+        </strong>
 
-              <strong>
-                ${escapeHtml(
-                  formatDateTime(
-                    shippedAt
-                  )
-                )}
-              </strong>
+      </div>
 
-            </div>
 
-          `
-          : ""
-      }
+      <div class="tracking-summary-total">
+
+        <span>
+          訂單總金額
+        </span>
+
+        <strong>
+          NT$${money(
+            master.payableTotal
+          )}
+        </strong>
+
+      </div>
 
     </div>
 
